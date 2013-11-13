@@ -5,8 +5,8 @@ const WPA_SCAN_INTERVAL = 5
 const WPA_CONNECT_INTERVAL = 500
 const WPA_CONNECT_TIMEOUT = 6
 
-const LINK_UP byte = 0x0
-const LINK_DOWN byte = 0x1
+const LINK_UP byte = 0x31
+const LINK_DOWN byte = 0x30
 
 const INTF_TYPE_UNKNOWN  byte = 0x0
 const INTF_TYPE_LOOPBACK byte = 0x1
