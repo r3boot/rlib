@@ -4,9 +4,9 @@ import (
     "github.com/r3boot/rlib/logger"
 )
 
-var Log logger.Log
+var Log *logger.Log
 
-func Setup (l logger.Log) (err error) {
+func Setup (l *logger.Log) (err error) {
     myname := "sys.Setup"
 
     Log = l

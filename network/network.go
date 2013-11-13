@@ -6,9 +6,9 @@ import (
 
 type Network struct {}
 
-var Log logger.Log
+var Log *logger.Log
 
-func Setup (l logger.Log) (err error) {
+func Setup (l *logger.Log) (err error) {
     myname := "networking.Setup"
 
     Log = l
