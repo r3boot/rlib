@@ -16,7 +16,7 @@ type Interface struct {
 }
 
 func InterfaceFactory (intf net.Interface) Interface {
-    return Interface{
+    var i = Interface{
         intf,
         INTF_TYPE_UNKNOWN,
         WpaSupplicant{Interface: intf.Name},
@@ -26,4 +26,8 @@ func InterfaceFactory (intf net.Interface) Interface {
         Ip{Interface: intf.Name},
         RIB{Interface: intf.Name},
     }
+
+    i.Type = i.GetType()
+
+    return i
 }
