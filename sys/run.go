@@ -13,7 +13,7 @@ func Run (command string, args ...string) (stdout, stderr  []string, err error) 
     cmd.Stdout = &stdout_buf
     cmd.Stderr = &stderr_buf
 
-    Log.Debug(myname, command + strings.Join(args, " "))
+    Log.Debug(myname, command + " " + strings.Join(args, " "))
     if err = cmd.Run(); err != nil {
         return
     }

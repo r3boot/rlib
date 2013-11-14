@@ -8,17 +8,20 @@ import (
 const MSG_INFO byte    = 0x0
 const MSG_WARNING byte = 0x1
 const MSG_FATAL byte   = 0x2
-const MSG_DEBUG byte   = 0x3
+const MSG_VERBOSE byte = 0x3
+const MSG_DEBUG byte   = 0x4
 
 var MSG_STRING = map[byte]string{
     MSG_INFO:    "INFO",
     MSG_WARNING: "WARNING",
     MSG_FATAL:   "FATAL",
+    MSG_VERBOSE: "VERBOSE",
     MSG_DEBUG:   "DEBUG",
 }
 
 type Log struct {
     UseDebug bool
+    UseVerbose bool
     UseTimestamp bool
     TimestampFormat string
 }
@@ -46,6 +49,12 @@ func (l Log) Warning (caller, message string) {
 
 func (l Log) Fatal (caller, message string) {
     l.Message(caller, message, MSG_FATAL)
+}
+
+func (l Log) Verbose (caller, message string) {
+    if l.UseDebug || l.UseVerbose {
+        l.Message(caller, message, MSG_VERBOSE)
+    }
 }
 
 func (l Log) Debug (caller, message string) {
