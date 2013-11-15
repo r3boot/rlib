@@ -19,3 +19,8 @@ const LINK_WIRELESS string = "0x028000"
 
 const AF_INET byte = 4
 const AF_INET6 byte= 6
+
+const AF_INET_STR_LEN int = 8
+const AF_INET6_STR_LEN int = 32
+
+const LOOPBACK_LINE_LENGTH int = 16

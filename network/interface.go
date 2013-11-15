@@ -12,7 +12,6 @@ type Interface struct {
     Link
     RA
     Ip
-    RIB
 }
 
 func InterfaceFactory (intf net.Interface) Interface {
@@ -24,7 +23,6 @@ func InterfaceFactory (intf net.Interface) Interface {
         Link{Interface: intf},
         RA{Interface: intf.Name},
         Ip{Interface: intf.Name},
-        RIB{Interface: intf.Name},
     }
 
     i.Type = i.GetType()
