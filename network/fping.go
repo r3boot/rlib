@@ -12,7 +12,7 @@ import (
  * the return code of fping is zero, false otherwise.
  */
 func Fping(ipaddr net.IP, count int) (up bool, latency float64) {
-    myname := "network.Ping"
+    myname := "network.Fping"
     var fping string
     if ipaddr == nil {
         return
