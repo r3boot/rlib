@@ -29,7 +29,7 @@ func (d Dhcpcd) Start () {
  */
 func (d Dhcpcd) Stop () {
     myname := "Dhcpcd.Stop"
-    _, _, err := sys.Run("/usr/sbin/dhcpcd", "-x", d.Interface)
+    _, _, err := sys.Run("/usr/sbin/dhcpcd", "-k", d.Interface)
     if err != nil {
         Log.Warning(myname, "Failed to stop dhcpcd")
     }

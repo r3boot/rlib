@@ -24,3 +24,9 @@ const AF_INET_STR_LEN int = 8
 const AF_INET6_STR_LEN int = 32
 
 const LOOPBACK_LINE_LENGTH int = 16
+
+const RIB_PROC_FILE_AF_INET string = "/proc/net/route"
+const RIB_PROC_FILE_AF_INET6 string = "/proc/net/ipv6_route"
+
+const IP_USE_AF_INET string = "-4"
+const IP_USE_AF_INET6 string = "-6"

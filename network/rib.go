@@ -12,26 +12,24 @@ import (
 type Route struct {
     Destination net.IPNet
     Gateway net.IP
-    Interface net.Interface
 }
 
 type RIB struct {
-    Af byte
-    procFile string
-    ipPrefix string
 }
 
 func (r RIB) GetRoute (network net.IPNet) (result Route) {
     myname := "RIB.GetRoute"
 
-    content, err := ioutil.ReadFile(r.procFile)
+    af, proc_file, _ := getAfDetails(network)
+
+    content, err := ioutil.ReadFile(proc_file)
     if err != nil { return }
 
     for _, line := range strings.Split(string(content), "\n") {
         if strings.HasPrefix(line, "Iface") { continue }
         if line == "" { continue }
 
-        route, err := parseRoutingLine(r.Af, line)
+        route, err := parseRoutingLine(af, line)
         if err != nil {
             Log.Warning(myname, "Failed to parse routing line: " + line)
             continue
@@ -47,15 +45,15 @@ func (r RIB) GetRoute (network net.IPNet) (result Route) {
     return
 }
 
-func (r RIB) GetDefaultRoute () (route Route) {
+func (r RIB) GetDefaultRoute (af byte) (route Route) {
     myname := "RIB.GetDefaultRoute"
     var n string
-    if r.Af == AF_INET {
+    if af == AF_INET {
         n = "0.0.0.0/0"
-    } else if r.Af == AF_INET6 {
+    } else if af == AF_INET6 {
         n = "::/0"
     } else {
-        Log.Fatal(myname, "Unsupported address family: " + strconv.Itoa(int(r.Af)))
+        Log.Fatal(myname, "Unsupported address family: " + strconv.Itoa(int(af)))
         return
     }
 
@@ -68,35 +66,17 @@ func (r RIB) GetDefaultRoute () (route Route) {
     return
 }
 
-func (r RIB) AddRoute (network net.IPNet, gateway net.IP, af byte) {
-    _, _, err := sys.Run("/sbin/ip", r.ipPrefix, "route", "add", network.String(),
+func (r RIB) AddRoute (network net.IPNet, gateway net.IP) {
+    _, _, use_af := getAfDetails(network)
+    _, _, err := sys.Run("/sbin/ip", use_af, "route", "add", network.String(),
         "via", gateway.String())
     if err != nil {
         return
     }
 }
 
-func RIBFactory (af byte) (rib RIB) {
-    myname := "network.RIBFactory"
-
-    var proc_file, ip_prefix string
-
-    if af == AF_INET {
-        proc_file = "/proc/net/route"
-        ip_prefix = "-4"
-    } else if af == AF_INET6 {
-        proc_file = "/proc/net/ipv6_route"
-        ip_prefix = "-6"
-    } else {
-        Log.Fatal(myname, "Unsupported addres family: " + strconv.Itoa(int(af)))
-        return
-    }
-
-    rib = RIB{
-        af,
-        proc_file,
-        ip_prefix,
-    }
+func RIBFactory () (rib RIB) {
+    rib = RIB{ }
     return
 }
 
@@ -115,9 +95,6 @@ func parseRoutingLine (af byte, line string) (route Route, err error) {
 func parseIpv4RoutingLine (line string) (route Route, err error) {
     t := strings.Split(line, "\t")
 
-    intf, err := net.InterfaceByName(t[0])
-    if err != nil { return }
-
     dest, err := HexToIp(t[1])
     if err != nil { return }
 
@@ -127,7 +104,6 @@ func parseIpv4RoutingLine (line string) (route Route, err error) {
     gateway, err := HexToIp(t[2])
     if err != nil { return }
 
-    route.Interface = *intf
     route.Destination.IP = dest
     route.Destination.Mask = mask
     route.Gateway = gateway
@@ -141,12 +117,6 @@ func parseIpv6RoutingLine (line string) (route Route, err error) {
 
     // Skip routes on localhost
     if len(t) == LOOPBACK_LINE_LENGTH {
-        return
-    }
-
-    intf, err := net.InterfaceByName(t[11])
-    if err != nil {
-        Log.Warning(myname, err.Error())
         return
     }
 
@@ -168,10 +138,27 @@ func parseIpv6RoutingLine (line string) (route Route, err error) {
         return
     }
 
-    route.Interface = *intf
     route.Destination.IP = dest
     route.Destination.Mask = mask
     route.Gateway = gateway
+
+    return
+}
+
+func getAfDetails (network net.IPNet) (af byte, proc_file, use_af string) {
+    myname := "network.getAfDetails"
+
+    if len(network.IP) == net.IPv4len {
+        af = AF_INET
+        proc_file = RIB_PROC_FILE_AF_INET
+        use_af = IP_USE_AF_INET
+    } else if len(network.IP) == net.IPv6len {
+        af = AF_INET6
+        proc_file = RIB_PROC_FILE_AF_INET6
+        use_af = IP_USE_AF_INET6
+    } else {
+        Log.Warning(myname, "Address family unknown")
+    }
 
     return
 }
