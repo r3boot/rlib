@@ -12,6 +12,11 @@ type ResolvConf struct {
     Search string
 }
 
+func (rc *ResolvConf) UpdateResolvConf () (err error) {
+    _, _, err = sys.Run("/sbin/resolvconf", "-u")
+    return
+}
+
 func (rc *ResolvConf) AddConfig () {
     myname := "ResolvConf.AddConfig"
     r := *rc
@@ -26,6 +31,12 @@ func (rc *ResolvConf) AddConfig () {
     _, _, err := sys.RunWithInput(bytes.NewReader(stdin), "/sbin/resolvconf", "-a", r.Interface)
     if err != nil {
         Log.Warning(myname, "Failed to add config for " + r.Interface + ": " + err.Error())
+        return
+    }
+
+    if err = r.UpdateResolvConf(); err != nil {
+        Log.Warning(myname, "Failed to update /etc/resolv.conf: " + err.Error())
+        return
     }
 
     *rc = r
@@ -34,10 +45,17 @@ func (rc *ResolvConf) AddConfig () {
 func (rc *ResolvConf) RemoveConfig () {
     myname := "ResolvConf.RemoveConfig"
     r := *rc
+
     _, _, err := sys.Run("/sbin/resolvconf", "-d", r.Interface)
     if err != nil {
         Log.Warning(myname, "Failed to remove config for " + r.Interface + ": " + err.Error())
     }
+
+    if err = r.UpdateResolvConf(); err != nil {
+        Log.Warning(myname, "Failed to update /etc/resolv.conf: " + err.Error())
+        return
+    }
+
     *rc = r
 }
 

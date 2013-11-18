@@ -12,7 +12,7 @@ type Interface struct {
     Ip
     WpaSupplicant WpaSupplicant
     Dhcpcd Dhcpcd
-    ResolvConf ResolvConf
+    Resolver ResolvConf
 }
 
 func InterfaceFactory (intf net.Interface) Interface {

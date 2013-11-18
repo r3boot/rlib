@@ -10,7 +10,9 @@ import (
 )
 
 type Dhcpcd struct {
-    Interface string
+    Interface       string
+    SetMtu          bool
+    UseResolvconf   bool
 }
 
 /*
@@ -18,7 +20,22 @@ type Dhcpcd struct {
  */
 func (d Dhcpcd) Start () {
     myname := "Dhcpcd.Start"
-    _, _, err := sys.Run("/usr/sbin/dhcpcd", "-q", d.Interface)
+    var args []string
+    args = append(args, "-q")
+
+    if ! d.UseResolvconf {
+        args = append(args, "-C")
+        args = append(args, "resolv.conf")
+    }
+
+    if ! d.SetMtu {
+        args = append(args, "-C")
+        args = append(args, "mtu")
+    }
+
+    args = append(args, d.Interface)
+
+    _, _, err := sys.Run("/usr/sbin/dhcpcd", args...)
     if err != nil {
         Log.Warning(myname, "Failed to start dhcpcd")
     }
