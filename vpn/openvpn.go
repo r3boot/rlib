@@ -89,7 +89,6 @@ func (ovpn *OpenVPN) GetPid () (pid int) {
     o := *ovpn
 
     if ! sys.FileExists(o.PidFile) {
-        Log.Warning(myname, "Pidfile " + o.PidFile + " does not exist")
         return
     }
 

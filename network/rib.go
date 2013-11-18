@@ -66,6 +66,10 @@ func (r RIB) GetDefaultRoute (af byte) (route Route) {
     return
 }
 
+func (r RIB) GetDefaultGateway (af byte) (gateway net.IP) {
+    return r.GetDefaultRoute(af).Gateway
+}
+
 func (r RIB) AddRoute (network net.IPNet, gateway net.IP) {
     _, _, use_af := getAfDetails(network)
     _, _, err := sys.Run("/sbin/ip", use_af, "route", "add", network.String(),
