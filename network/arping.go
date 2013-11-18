@@ -40,7 +40,7 @@ func Arping(ipaddr net.IP, intf net.Interface, count int) (up bool, latency floa
         }
     }
 
-    latency = tot_latency / float64(count)
+    latency = (tot_latency / float64(count)) / 1000
 
     return
 }
