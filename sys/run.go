@@ -7,7 +7,7 @@ import (
     "strings"
 )
 
-func Run (command string, args ...string) (stdout, stderr  []string, err error) {
+func Run (command string, args ...string) (stdout, stderr []string, err error) {
     myname := "sys.Run"
     var stdout_buf, stderr_buf bytes.Buffer
     cmd := exec.Command(command, args...)
@@ -22,6 +22,14 @@ func Run (command string, args ...string) (stdout, stderr  []string, err error) 
     stdout = strings.Split(stdout_buf.String(), "\n")
     stderr = strings.Split(stderr_buf.String(), "\n")
 
+    return
+}
+
+func Start (command string, args ...string) (err error) {
+    myname := "sys.Start"
+    cmd := exec.Command(command, args...)
+    Log.Debug(myname, command + " " + strings.Join(args, " "))
+    err = cmd.Start()
     return
 }
 

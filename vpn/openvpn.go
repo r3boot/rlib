@@ -12,14 +12,14 @@ import (
 )
 
 type OpenVPN struct {
-    Name string
-    InterfaceName string
-    Interface network.Interface
-    ConfigFile string
-    PidFile string
-    StatusFile string
-    Remote net.IP
-    Port int
+    Name            string
+    InterfaceName   string
+    Interface       network.Interface
+    ConfigFile      string
+    PidFile         string
+    StatusFile      string
+    Remote          net.IP
+    Port            int
 }
 
 func (ovpn *OpenVPN) Start () {
