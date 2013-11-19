@@ -6,11 +6,11 @@ import (
     "os"
 )
 
-const MSG_INFO byte    = 0x0
-const MSG_WARNING byte = 0x1
-const MSG_FATAL byte   = 0x2
-const MSG_VERBOSE byte = 0x3
-const MSG_DEBUG byte   = 0x4
+const MSG_INFO      byte = 0x0
+const MSG_WARNING   byte = 0x1
+const MSG_FATAL     byte = 0x2
+const MSG_VERBOSE   byte = 0x3
+const MSG_DEBUG     byte = 0x4
 
 var MSG_STRING = map[byte]string{
     MSG_INFO:    "INFO    ",
@@ -21,9 +21,9 @@ var MSG_STRING = map[byte]string{
 }
 
 type Log struct {
-    UseDebug bool
-    UseVerbose bool
-    UseTimestamp bool
+    UseDebug        bool
+    UseVerbose      bool
+    UseTimestamp    bool
     TimestampFormat string
 }
 

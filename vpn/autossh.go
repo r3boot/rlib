@@ -2,6 +2,7 @@ package vpn
 
 import (
     "errors"
+    "net"
     "os"
     "io/ioutil"
     "strconv"
@@ -38,31 +39,40 @@ func (assh *AutoSSH) Start () (err error) {
 func (assh *AutoSSH) Stop () (err error) {
     a := *assh
 
-    pid, err := a.GetPid()
+    apid, _, err := a.GetPid()
     if err != nil {
         err = errors.New("Failed to retrieve pid: " + err.Error())
         return
     }
 
-    process, err := os.FindProcess(pid)
+    autossh, err := os.FindProcess(apid)
     if err != nil {
         err = errors.New("Failed to convert pid to Process: " + err.Error())
         return
     }
-
-    process.Kill()
-    process.Wait()
+    autossh.Kill()
+    autossh.Wait()
 
     return
 }
 
-func (assh *AutoSSH) GetPid () (pid int, err error) {
+func (assh *AutoSSH) GetPid () (assh_pid, ssh_pid int, err error) {
     a := *assh
-    cmdline := "/usr/bin/autossh -M " + strconv.Itoa(a.EchoPort) + " -F " + a.ConfigFile + " -N -y " + a.Name
-    pid, err = sys.PidOf(cmdline)
 
+    cmdline := "/usr/bin/autossh -M " + strconv.Itoa(a.EchoPort) + " -F " + a.ConfigFile + " -N -y " + a.Name
+    assh_pid, err = sys.PidOf(cmdline)
     if err != nil {
-        pid = 0
+        assh_pid = 0
+        return
+    }
+
+    eq := strconv.Itoa(a.EchoPort)
+    er := strconv.Itoa(a.EchoPort + 1)
+    cmdline = "/usr/bin/ssh -L " + eq + ":127.0.0.1:" + eq + " -R " + eq + ":127.0.0.1:" + er + " -F " + a.ConfigFile + " -N -y " + a.Name
+    assh_pid, err = sys.PidOf(cmdline)
+    if err != nil {
+        assh_pid = 0
+        return
     }
 
     return
@@ -70,7 +80,7 @@ func (assh *AutoSSH) GetPid () (pid int, err error) {
 
 func (assh *AutoSSH) IsRunning () (result bool) {
     a := *assh
-    pid, err := a.GetPid()
+    pid, _, err := a.GetPid()
     if err != nil {
         result = false
     } else if pid > 1 {
@@ -81,6 +91,12 @@ func (assh *AutoSSH) IsRunning () (result bool) {
 }
 
 func (assh *AutoSSH) IsConnected () bool {
+    a := *assh
+
+    _, err := net.Dial("tcp", "127.0.0.1:" + strconv.Itoa(a.EchoPort))
+    if err != nil {
+        return false
+    }
 
     return true
 }
