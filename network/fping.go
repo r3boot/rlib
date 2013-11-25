@@ -1,6 +1,7 @@
 package network
 
 import (
+    "errors"
     "net"
     "strings"
     "strconv"
@@ -12,19 +13,24 @@ import (
  * the return code of fping is zero, false otherwise.
  */
 func Fping(ipaddr net.IP, count int) (up bool, latency float64) {
-    myname := "network.Fping"
-    var fping string
+    var cmd string
+
     if ipaddr == nil {
         return
     }
 
     ip_len := len(ipaddr)
     if ip_len == net.IPv4len {
-        fping = "/usr/sbin/fping"
+        cmd = "fping"
     } else if ip_len == net.IPv6len {
-        fping = "/usr/sbin/fping6"
+        cmd = "fping6"
     } else  {
-        Log.Warning(myname, "Unknown address length: " + strconv.Itoa(ip_len))
+        err = errors.New("Unknown address length: " + strconv.Itoa(ip_len))
+        return
+    }
+
+    fping, err := sys.BinaryPrefix(cmd)
+    if err != nil {
         return
     }
 
