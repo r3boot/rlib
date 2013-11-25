@@ -1,5 +1,9 @@
 package network
 
+import (
+    "net"
+)
+
 const WPA_STATE_COMPLETED = "COMPLETED"
 const WPA_SCAN_INTERVAL = 5
 const WPA_CONNECT_INTERVAL = 500
@@ -30,3 +34,18 @@ const RIB_PROC_FILE_AF_INET6 string = "/proc/net/ipv6_route"
 
 const IP_USE_AF_INET string = "-4"
 const IP_USE_AF_INET6 string = "-6"
+
+const IFCONFIG_USE_AF_INET string = "inet"
+const IFCONFIG_USE_AF_INET6 string = "inet6"
+
+type Ip struct {
+    Interface   string
+}
+
+type Route struct {
+    Destination net.IPNet
+    Gateway     net.IP
+}
+
+type RIB struct {
+}

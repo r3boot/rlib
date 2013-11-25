@@ -136,7 +136,11 @@ func (assh *AutoSSH) SetAgentVars () (err error) {
 func (assh *AutoSSH) ReadConfig () (err error) {
     a := *assh
 
-    pwd := sys.GetPasswdInfo(a.RunAs)
+    pwd, err := sys.GetPasswdInfo(a.RunAs)
+    if err != nil {
+        return
+    }
+
     a.ConfigFile = pwd.Homedir + "/.ssh/config"
     a.AgentFile = pwd.Homedir + "/.ssh/ssh-agent.vars"
     a.EchoPort = 50100 + (a.Id * 2)

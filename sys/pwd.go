@@ -1,6 +1,7 @@
 package sys
 
 import (
+    "errors"
     "io/ioutil"
     "strconv"
     "strings"
@@ -15,18 +16,17 @@ type PasswdInfo struct {
     Shell       string
 }
 
-func GetPasswdInfo (user string) (info PasswdInfo) {
-    myname := "sys.GetPasswdInfo"
+func GetPasswdInfo (user string) (info PasswdInfo, err error) {
     passwd_file := "/etc/passwd"
 
     if ! FileExists(passwd_file) {
-        Log.Warning(myname, passwd_file + " does not exists")
+        err = errors.New(passwd_file + " does not exists")
         return
     }
 
     content, err := ioutil.ReadFile(passwd_file)
     if err != nil {
-        Log.Warning(myname, "Failed to read " + passwd_file + ": " + err.Error())
+        err = errors.New("Failed to read " + passwd_file + ": " + err.Error())
         return
     }
 

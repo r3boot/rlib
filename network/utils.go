@@ -58,15 +58,3 @@ func HexToBytes (hex_mask string) (mask net.IPMask, err error) {
     mask = net.CIDRMask(int(a[0]), 128)
     return
 }
-
-func mkUseAf(af byte) string {
-    myname := "network.mkUseAf"
-    if af == AF_INET {
-        return "-4"
-    } else if af == AF_INET6 {
-        return "-6"
-    } else {
-        Log.Fatal(myname, "Unknown AF: " + strconv.Itoa(int(af)))
-    }
-    return ""
-}
