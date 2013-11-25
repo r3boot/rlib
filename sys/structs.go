@@ -16,3 +16,5 @@ const PASSWD_GID        int = 3
 const PASSWD_REALNAME   int = 4
 const PASSWD_HOMEDIR    int = 5
 const PASSWD_SHELL      int = 6
+
+var ETC_PATHS []string = []string{"/etc", "/usr/local/etc"}

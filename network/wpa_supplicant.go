@@ -10,15 +10,19 @@ import (
 )
 
 type WirelessNetwork struct {
-    Id int
-    Ssid string
-    Frequency int
-    Signal int
-    Connected bool
+    Id          int
+    Ssid        string
+    Frequency   int
+    Signal      int
+    Connected   bool
 }
 
 type WpaSupplicant struct {
-    Interface string
+    Interface           string
+    CmdWpaSupplicant    string
+    CmdWpaCli           string
+    CfgFile             string
+    Driver              string
 }
 
 /*
@@ -26,7 +30,7 @@ type WpaSupplicant struct {
  * wpa_cli is non-zero.
  */
 func (w WpaSupplicant) Run (command string) (stdout, stderr []string, err error) {
-    stdout, stderr, err = sys.Run("/usr/sbin/wpa_cli", "-i" + w.Interface, command)
+    stdout, stderr, err = sys.Run(w.CmdWpaCli, "-i" + w.Interface, command)
     return
 }
 
@@ -36,14 +40,8 @@ func (w WpaSupplicant) Run (command string) (stdout, stderr []string, err error)
  * is non-zero, return an error.
  */
 func (w WpaSupplicant) Start () (err error) {
-    cfg_file := "/etc/wpa_supplicant/wpa_supplicant-" + w.Interface + ".conf"
-    if ! sys.FileExists(cfg_file) {
-        err = errors.New("Configuration file not found: " + cfg_file)
-        return
-    }
-
-    _, _, err = sys.Run("/usr/sbin/wpa_supplicant", "-B", "-Dwext", "-i" +
-        w.Interface, "-c", cfg_file)
+    _, _, err = sys.Run(w.CmdWpaSupplicant, "-B", "-D" + w.Driver, "-i" +
+        w.Interface, "-c", w.CfgFile)
 
     if err != nil {
         log.Print(err)
@@ -158,7 +156,7 @@ func (w WpaSupplicant) ConfiguredNetworks () (nets []WirelessNetwork) {
         if len(line) == 0 { continue }
 
         t := strings.Split(line, "\t")
-        
+
         var network = new(WirelessNetwork)
         network.Id, err = strconv.Atoi(t[0])
         if err != nil {
@@ -254,4 +252,37 @@ func (w WpaSupplicant) ConnectAny () bool {
     }
 
     return false
+}
+
+func WpaSupplicantFactory (intf string) (w WpaSupplicant, err error) {
+    wpa_supplicant, err := sys.BinaryPrefix("wpa_supplicant")
+    if err != nil {
+        return
+    }
+
+    wpa_cli, err := sys.BinaryPrefix("wpa_cli")
+    if err != nil {
+        return
+    }
+
+    cfg_file, err := sys.ConfigPrefix("wpa_supplicant-" + intf + ".conf")
+    if err != nil {
+        return
+    }
+
+    uname, err := sys.Uname()
+    if err != nil {
+        return
+    }
+
+    var driver string
+    if uname.Ident == "Linux" {
+        driver = "wext"
+    } else if uname.Ident == "FreeBSD" {
+        driver = "bsd"
+    }
+
+    w = WpaSupplicant{intf, wpa_supplicant, wpa_cli, cfg_file, driver}
+
+    return
 }
