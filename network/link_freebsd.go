@@ -2,6 +2,7 @@ package network
 
 import (
     "errors"
+    "log"
     "net"
     "strconv"
     "strings"
@@ -27,11 +28,13 @@ func (l Link) HasCarrier () (result bool, err error) {
         }
     }
 
-    err = errors.New("Failed to determine carrier status")
+    result = false
+
     return
 }
 
 func (l Link) SetLinkStatus (link_status byte) (err error) {
+    log.Print(l)
     var status string
     if link_status == LINK_UP {
         status = "up"
@@ -46,9 +49,12 @@ func (l Link) SetLinkStatus (link_status byte) (err error) {
     return
 }
 
-func (l Link) GetType () (intf_type byte, err error) {
+func (link *Link) GetType () (intf_type byte, err error) {
+    l := *link
+
     if ! l.HasLink() {
         if err = l.SetLinkStatus(LINK_UP); err != nil {
+            err = errors.New("SetLinkStatus failed: " + err.Error())
             return
         }
     }
@@ -90,6 +96,8 @@ func (l Link) SetMtu (mtu int) (err error) {
 }
 
 func LinkFactory (intf net.Interface) (l Link, err error) {
+    l = *new(Link)
+
     ifconfig, err := sys.BinaryPrefix("ifconfig")
     if err != nil {
         return

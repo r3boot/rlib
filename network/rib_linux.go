@@ -56,6 +56,20 @@ func (r RIB) AddRoute (network net.IPNet, gateway net.IP) (err error) {
     return
 }
 
+func (r RIB) RemoveRoute (network net.IPNet) (err error) {
+    _, _, use_af, err := getAfDetails(network)
+    if err != nil {
+        return
+    }
+
+    _, _, err := sys.Run("/sbin/ip", use_af, "route", "del", network.String())
+    if err != nil {
+        return
+    }
+
+    return
+}
+
 func parseRoutingLine (af byte, line string) (route Route, err error) {
     if af == AF_INET {
         route, err = parseIpv4RoutingLine(line)

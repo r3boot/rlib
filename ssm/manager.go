@@ -18,12 +18,13 @@ type Manager interface {
 
 func ManagerFactory () (m Manager, err error) {
     uname, err := sys.Uname()
-    lsb, err := sys.LSBFactory()
-    if err != nil {
-        return
-    }
 
     if uname.Ident == sys.UNAME_LINUX {
+        lsb, _:= sys.LSBFactory()
+        if err != nil {
+            return
+        }
+
         if lsb.Id == sys.DISTRO_ARCHLINUX {
             m = Manager(Systemd{})
         } else {

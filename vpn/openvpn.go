@@ -68,10 +68,7 @@ func (ovpn *OpenVPN) Start () (err error) {
 }
 
 func (ovpn *OpenVPN) Stop () (err error) {
-    myname := "OpenVPN.Stop"
-
     o := *ovpn
-    Log.Debug(myname, "Stopping OpenVPN")
 
     if ! sys.FileExists(o.PidFile) {
         return
@@ -99,7 +96,6 @@ func (ovpn *OpenVPN) Stop () (err error) {
 }
 
 func (ovpn *OpenVPN) GetPid () (pid int, err error) {
-    myname := "OpenVPN.GetPid"
     o := *ovpn
 
     if ! sys.FileExists(o.PidFile) {
@@ -114,7 +110,7 @@ func (ovpn *OpenVPN) GetPid () (pid int, err error) {
 
     pid, err = strconv.Atoi(strings.Split(string(content), "\n")[0])
     if err != nil {
-        Log.Warning(myname, "Failed to convert pid to int: " + string(content))
+        err = errors.New("Failed to convert pid to int: " + string(content) + ": " + err.Error())
         pid = 0
         return
     }
@@ -216,31 +212,22 @@ func (ovpn *OpenVPN) ReadConfig () (err error) {
 }
 
 func OpenVPNFactory (name string) (o OpenVPN, err error) {
+    o = *new(OpenVPN)
+
     cfg_file, err := sys.ConfigPrefix("openvpn/" + name + ".conf")
     if err != nil {
         return
     }
 
-    pid_file, err := sys.RunPrefix("openvpn-" + name + ".pid")
-    if err != nil {
-        return
-    }
+    o.Name = name
+    o.InterfaceName = ""
+    o.Interface = network.Interface{}
+    o.ConfigFile = cfg_file
+    o.PidFile = "/var/run/openvpn-" + name + ".pid"
+    o.StatusFile = "/var/run/openvpn-" + name + ".status"
+    o.Remote = net.IP{}
+    o.Port = 1900
 
-    status_file, err := sys.RunPrefix("openvpn-" + name + ".status")
-    if err != nil {
-        return
-    }
-
-    o = OpenVPN{
-        name,
-        "",
-        network.Interface{},
-        cfg_file,
-        pid_file,
-        status_file,
-        net.IP{},
-        1900,
-    }
     o.ReadConfig()
 
     return

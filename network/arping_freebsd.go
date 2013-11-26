@@ -21,7 +21,7 @@ func Arping(ipaddr net.IP, intf net.Interface, count int) (up bool, latency floa
         return
     }
 
-    stdout, _, err := sys.Run(arping, "-I", intf.Name, "-c", strconv.Itoa(count), "-w", "3", ipaddr.String())
+    stdout, _, err := sys.Run(arping, "-I", intf.Name, "-w", "3000", "-c", strconv.Itoa(count), ipaddr.String())
 
     var tot_latency float64 = 0
 
@@ -29,21 +29,22 @@ func Arping(ipaddr net.IP, intf net.Interface, count int) (up bool, latency floa
         up = true
 
         for _, line := range stdout {
-            if ! strings.HasPrefix(line, "Unicast reply from") {
+            if ! strings.Contains(line, "bytes from") {
                 continue
             }
 
-            raw_latency := strings.Replace(strings.Split(line, " ")[6], "ms", "", -1)
+            raw_latency := strings.Fields(line)[6]
+            raw_latency = strings.Split(raw_latency, "=")[1]
             l, err := strconv.ParseFloat(raw_latency, 64)
             if err != nil {
                 continue
             }
 
-            tot_latency += l
+            tot_latency += (l / 1000)
         }
     }
 
-    latency = (tot_latency / float64(count)) / 1000
+    latency = (tot_latency / float64(count))
 
     return
 }

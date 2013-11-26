@@ -87,7 +87,7 @@ func (d Dhcpcd) IsRunning () bool {
 }
 
 func (d Dhcpcd) GetOffer () (ip net.IP, network net.IPNet, err error) {
-    stdout, _, err := sys.Run(d.CmdDhcpcd, "-4", "-T", d.Interface)
+    stdout, _, err := sys.Run(d.CmdDhcpcd, "-T", d.Interface)
     if err != nil {
         return
     }
