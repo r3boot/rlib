@@ -12,7 +12,7 @@ import (
  * Send count icmp/ipv6-icmp packet(s) to ipaddr using fping. Return true if
  * the return code of fping is zero, false otherwise.
  */
-func Fping(ipaddr net.IP, count int) (up bool, latency float64) {
+func Fping(ipaddr net.IP, count int) (up bool, latency float64, err error) {
     var cmd string
 
     if ipaddr == nil {
@@ -40,7 +40,7 @@ func Fping(ipaddr net.IP, count int) (up bool, latency float64) {
 
         latency, err = strconv.ParseFloat(strings.Split(stderr[0], "/")[7], 64)
         if err != nil {
-            Log.Warning(myname, "Error parsing float: " + strings.Split(stderr[0], "/")[7])
+            err = errors.New("Error parsing float: " + strings.Split(stderr[0], "/")[7] + ": " + err.Error())
             up = false
             return
         }
@@ -52,6 +52,6 @@ func Fping(ipaddr net.IP, count int) (up bool, latency float64) {
 /*
  * Send three ping packets to ipaddr using Ping and return the results
  */
-func IsReachable (ipaddr net.IP) (up bool, latency float64) {
+func IsReachable (ipaddr net.IP) (up bool, latency float64, err error) {
     return Fping(ipaddr, 3)
 }

@@ -1,9 +1,5 @@
 package network
 
-import (
-    "github.com/r3boot/rlib/sys"
-)
-
 func (r RA) AcceptsRA () (result bool, err error) {
     value, err := sys.GetSysctl("net.ipv6.conf." + r.Interface + ".accept_ra")
     if err != nil {

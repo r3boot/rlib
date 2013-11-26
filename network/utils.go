@@ -2,13 +2,11 @@ package network
 
 import (
     "encoding/hex"
+    "errors"
     "net"
-    "strconv"
 )
 
 func HexToIp (hex_ip string) (ip net.IP, err error) {
-    myname := "network.HexToIp"
-
     hex_ip_len := len(hex_ip)
     if hex_ip_len == AF_INET_STR_LEN {
         ip = make(net.IP, net.IPv4len)
@@ -30,7 +28,6 @@ func HexToIp (hex_ip string) (ip net.IP, err error) {
 
         ip = net.ParseIP(raw_ip)
         if err != nil {
-            Log.Warning(myname, err.Error())
             return
         }
 
@@ -48,10 +45,9 @@ func HexToIpv4Mask (hex_mask string) (mask net.IPMask, err error) {
 }
 
 func HexToBytes (hex_mask string) (mask net.IPMask, err error) {
-    myname := "network.HexToBytes"
     a, err := hex.DecodeString(hex_mask)
     if err != nil {
-        Log.Warning(myname, "Failed to decode hex: " + hex_mask)
+        err = errors.New("Failed to decode hex: " + hex_mask)
         return
     }
 

@@ -4,7 +4,6 @@ import (
     "net"
     "io/ioutil"
     "strconv"
-    "github.com/r3boot/rlib/sys"
 )
 
 /*
@@ -47,12 +46,7 @@ func (l Link) SetLinkStatus (link_status byte) (err error) {
  * a wireless nic. All other pci classes get flagged unknown.
  */
 func (l Link) GetType () (intf_type byte, err error) {
-    has_link, err := l.HasLink()
-    if err != nil {
-        return
-    }
-
-    if ! has_link {
+    if ! l.HasLink() {
         if err = l.SetLinkStatus(LINK_UP); err != nil {
             return
         }

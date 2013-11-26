@@ -52,3 +52,21 @@ func ConfigPrefix (cfg_file string) (path string, err error) {
     err = errors.New("Cannot find " + cfg_file)
     return
 }
+
+/*
+ * Look in various directories to find the prefix of a runtime file.
+ * Returns the absolute path to the runtime file if it is found and an error
+ * if not
+ */
+func RunPrefix (run_file string) (path string, err error) {
+    for _, p := range RUN_PATHS {
+        path = p + "/" + run_file
+        if FileExists(path) {
+            return
+        }
+    }
+
+    path = ""
+    err = errors.New("Cannot find " + run_file)
+    return
+}

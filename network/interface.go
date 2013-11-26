@@ -57,7 +57,11 @@ func InterfaceFactory (intf net.Interface) (i Interface, err error) {
         resolvconf,
     }
 
-    i.Type = i.GetType()
+    i.Type, err = i.GetType()
+    if err != nil {
+        i = Interface{}
+        return
+    }
 
     return
 }

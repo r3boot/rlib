@@ -1,6 +1,7 @@
 package ssm
 
 import (
+    "errors"
     "github.com/r3boot/rlib/sys"
 )
 
@@ -43,13 +44,13 @@ func (s Service) IsEnabled (name string) (result bool, err error) {
     return
 }
 
-func ServiceFactory () (s Service, err error) {
+func (s Service) Setup () (err error) {
     service, err := sys.BinaryPrefix("service")
     if err != nil {
         return
     }
 
-    s = Service{service}
+    s.CmdService = service
 
     return
 }

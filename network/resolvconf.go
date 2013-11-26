@@ -2,6 +2,7 @@ package network
 
 import (
     "bytes"
+    "errors"
     "net"
     "github.com/r3boot/rlib/sys"
 )
@@ -19,8 +20,7 @@ func (rc *ResolvConf) UpdateResolvConf () (err error) {
     return
 }
 
-func (rc *ResolvConf) AddConfig () {
-    myname := "ResolvConf.AddConfig"
+func (rc *ResolvConf) AddConfig () (err error) {
     r := *rc
 
     var stdin []byte
@@ -30,31 +30,31 @@ func (rc *ResolvConf) AddConfig () {
         stdin = append(stdin, "nameserver " + nameserver.String() + "\n"...)
     }
 
-    _, _, err := sys.RunWithInput(bytes.NewReader(stdin), r.CmdResolvconf, "-a", r.Interface)
+    _, _, err = sys.RunWithInput(bytes.NewReader(stdin), r.CmdResolvconf, "-a", r.Interface)
     if err != nil {
-        Log.Warning(myname, "Failed to add config for " + r.Interface + ": " + err.Error())
+        err = errors.New("Failed to add config for " + r.Interface + ": " + err.Error())
         return
     }
 
     if err = r.UpdateResolvConf(); err != nil {
-        Log.Warning(myname, "Failed to update /etc/resolv.conf: " + err.Error())
+        err = errors.New("Failed to update /etc/resolv.conf: " + err.Error())
         return
     }
 
     *rc = r
+    return
 }
 
 func (rc *ResolvConf) RemoveConfig () {
-    myname := "ResolvConf.RemoveConfig"
     r := *rc
 
     _, _, err := sys.Run(r.CmdResolvconf, "-d", r.Interface)
     if err != nil {
-        Log.Warning(myname, "Failed to remove config for " + r.Interface + ": " + err.Error())
+        err = errors.New("Failed to remove config for " + r.Interface + ": " + err.Error())
     }
 
     if err = r.UpdateResolvConf(); err != nil {
-        Log.Warning(myname, "Failed to update /etc/resolv.conf: " + err.Error())
+        err = errors.New("Failed to update /etc/resolv.conf: " + err.Error())
         return
     }
 
@@ -62,12 +62,12 @@ func (rc *ResolvConf) RemoveConfig () {
 }
 
 func ResolvConfFactory (intf string) (r ResolvConf, err error) {
-    resolvconv, err := sys.BinaryPrefix("resolvconf")
+    resolvconf, err := sys.BinaryPrefix("resolvconf")
     if err != nil {
         return
     }
 
-    r = ResolvConf(intf, nil, make([]string), resolvconf)
+    r = ResolvConf{intf, "", *new([]net.IP), resolvconf}
 
     return
 }

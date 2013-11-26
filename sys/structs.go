@@ -21,3 +21,4 @@ const PASSWD_HOMEDIR    int = 5
 const PASSWD_SHELL      int = 6
 
 var ETC_PATHS []string = []string{"/etc", "/usr/local/etc"}
+var RUN_PATHS []string = []string{"/run", "/var/run", "/usr/local/var/run"}

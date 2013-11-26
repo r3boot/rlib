@@ -1,6 +1,7 @@
 package vpn
 
 import (
+    "errors"
     "net"
     "os"
     "time"
@@ -22,27 +23,30 @@ type OpenVPN struct {
     Port            int
 }
 
-func (ovpn *OpenVPN) Start () {
-    myname := "OpenVPN.Start"
+func (ovpn *OpenVPN) Start () (err error) {
     o := *ovpn
 
-    Log.Debug(myname, "Starting OpenVPN for " + o.Name)
-
-    _, _, err := sys.Run("/usr/sbin/openvpn", "--daemon", "--config", o.ConfigFile, "--writepid", o.PidFile)
+    _, _, err = sys.Run("/usr/sbin/openvpn", "--daemon", "--config", o.ConfigFile, "--writepid", o.PidFile)
     if err != nil {
-        Log.Warning(myname, "Failed to start OpenVPN")
+        err = errors.New("Failed to start OpenVPN: " + err.Error())
         return
     }
 
     var timeout_counter = 0
     for {
         if timeout_counter >= OVPN_STARTUP_MAXWAIT {
-            Log.Warning(myname, "Connection establishment took too long")
+            err = errors.New("Connection establishment took too long")
             o.Stop()
             break
         }
 
-        if o.IsConnected() {
+        is_connected, e := o.IsConnected()
+        if e != nil {
+            err = e
+            return
+        }
+
+        if is_connected {
             break
         }
 
@@ -51,28 +55,36 @@ func (ovpn *OpenVPN) Start () {
     }
 
     raw_intf, err := net.InterfaceByName(o.InterfaceName)
-    intf := network.InterfaceFactory(*raw_intf)
+    intf, err := network.InterfaceFactory(*raw_intf)
+    if err != nil {
+        return
+    }
+
     o.Interface = intf
 
     *ovpn = o
-    Log.Debug(myname, "Connected to OpenVPN tunnel " + o.Name)
+
+    return
 }
 
-func (ovpn *OpenVPN) Stop () {
+func (ovpn *OpenVPN) Stop () (err error) {
     myname := "OpenVPN.Stop"
 
     o := *ovpn
     Log.Debug(myname, "Stopping OpenVPN")
 
     if ! sys.FileExists(o.PidFile) {
-        Log.Warning(myname, "Pidfile " + o.PidFile + " does not exist")
         return
     }
 
-    pid := o.GetPid()
+    pid, err := o.GetPid()
+    if err != nil {
+        return
+    }
+
     proc, err := os.FindProcess(pid)
     if err != nil {
-        Log.Warning(myname, "Failed to find running process for pid " + strconv.Itoa(pid))
+        err = errors.New("Failed to find running process for pid " + strconv.Itoa(pid) + ": " + err.Error())
         return
     }
 
@@ -82,9 +94,11 @@ func (ovpn *OpenVPN) Stop () {
     o.Interface = network.Interface{}
 
     *ovpn = o
+
+    return
 }
 
-func (ovpn *OpenVPN) GetPid () (pid int) {
+func (ovpn *OpenVPN) GetPid () (pid int, err error) {
     myname := "OpenVPN.GetPid"
     o := *ovpn
 
@@ -94,7 +108,7 @@ func (ovpn *OpenVPN) GetPid () (pid int) {
 
     content, err := ioutil.ReadFile(o.PidFile)
     if err != nil {
-        Log.Warning(myname, "Cannot read pidfile " + o.PidFile)
+        err = errors.New("Cannot read pidfile " + o.PidFile + ": " + err.Error())
         return
     }
 
@@ -108,35 +122,38 @@ func (ovpn *OpenVPN) GetPid () (pid int) {
     return
 }
 
-func (ovpn *OpenVPN) IsRunning () bool {
+func (ovpn *OpenVPN) IsRunning () (result bool, err error) {
     o := *ovpn
-    pid := o.GetPid()
+    pid, err := o.GetPid()
+    if err != nil {
+        return
+    }
 
     proc_file := "/proc/" + strconv.Itoa(pid) + "/cmdline"
     content, err := ioutil.ReadFile(proc_file)
     if err != nil {
-        return false
+        return
     }
     ps := string(content)
 
-    return strings.Contains(ps, "openvpn") &&
+    result = strings.Contains(ps, "openvpn") &&
            strings.Contains(ps, o.Name)
+
+    return
 }
 
-func (ovpn *OpenVPN) IsConnected () bool {
-    myname := "OpenVPN.IsConnected"
-
+func (ovpn *OpenVPN) IsConnected () (result bool, err error) {
     o := *ovpn
 
     if ! sys.FileExists(o.StatusFile) {
-        Log.Warning(myname, "Status file " + o.StatusFile + " does not exist")
-        return false
+        err = errors.New("Status file " + o.StatusFile + " does not exist")
+        return
     }
 
     content, err := ioutil.ReadFile(o.StatusFile)
     if err != nil {
-        Log.Warning(myname, "Failed to read status file " + o.StatusFile)
-        return false
+        err = errors.New("Failed to read status file " + o.StatusFile + ": " + err.Error())
+        return
     }
 
     var t_lastupdate time.Time
@@ -146,28 +163,28 @@ func (ovpn *OpenVPN) IsConnected () bool {
         if t[0] == OVPN_STATUS_UPDATE {
             t_lastupdate, err = time.Parse("Mon Jan 02 15:04:05 2006", t[1])
             if err != nil {
-                Log.Warning(myname, "Failed to parse date")
-                return false
+                err = errors.New("Failed to parse date: " + err.Error())
+                return
             }
             break
         }
     }
 
-    return time.Now().Sub(t_lastupdate) < (61 * time.Second)
+    result = time.Now().Sub(t_lastupdate) < (61 * time.Second)
+    return
 }
 
-func (ovpn *OpenVPN) ReadConfig () {
-    myname := "OpenVPN.ReadConfig"
+func (ovpn *OpenVPN) ReadConfig () (err error) {
     o := *ovpn
 
     if ! sys.FileExists(o.ConfigFile) {
-        Log.Fatal(myname, "Cannot find" + o.ConfigFile)
+        err = errors.New("Cannot find" + o.ConfigFile)
         return
     }
 
     content, err := ioutil.ReadFile(o.ConfigFile)
     if err != nil {
-        Log.Warning(myname, "Cannot read " + o.ConfigFile)
+        err = errors.New("Cannot read " + o.ConfigFile + ": " + err.Error())
         return
     }
     for _, line := range strings.Split(string(content), "\n") {
@@ -176,15 +193,15 @@ func (ovpn *OpenVPN) ReadConfig () {
         case OVPN_CFG_REMOTE: {
             o.Remote, _, err = net.ParseCIDR(t[1] + "/32")
             if err != nil {
-                Log.Warning(myname, "Failed to parse remote")
-                continue
+                err = errors.New("Failed to parse remote: " + err.Error())
+                return
             }
         }
         case OVPN_CFG_PORT: {
             o.Port, err = strconv.Atoi(t[1])
             if err != nil {
-                Log.Warning(myname, "Failed to parse port")
-                continue
+                err = errors.New("Failed to parse port: " + err.Error())
+                return
             }
         }
         case OVPN_CFG_DEVICE: {
@@ -194,16 +211,33 @@ func (ovpn *OpenVPN) ReadConfig () {
     }
 
     *ovpn = o
+
+    return
 }
 
-func OpenVPNFactory (name string) (o OpenVPN) {
+func OpenVPNFactory (name string) (o OpenVPN, err error) {
+    cfg_file, err := sys.ConfigPrefix("openvpn/" + name + ".conf")
+    if err != nil {
+        return
+    }
+
+    pid_file, err := sys.RunPrefix("openvpn-" + name + ".pid")
+    if err != nil {
+        return
+    }
+
+    status_file, err := sys.RunPrefix("openvpn-" + name + ".status")
+    if err != nil {
+        return
+    }
+
     o = OpenVPN{
         name,
         "",
         network.Interface{},
-        "/etc/openvpn/" + name + ".conf",
-        "/var/run/openvpn-" + name + ".pid",
-        "/var/run/openvpn-" + name + ".status",
+        cfg_file,
+        pid_file,
+        status_file,
         net.IP{},
         1900,
     }

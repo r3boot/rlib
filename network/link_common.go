@@ -2,9 +2,6 @@ package network
 
 import (
     "net"
-    "io/ioutil"
-    "strconv"
-    "github.com/r3boot/rlib/sys"
 )
 
 type Link struct {
@@ -18,5 +15,5 @@ type Link struct {
  * returns false.
  */
 func (l Link) HasLink () bool {
-    return (l.Interface.Flags & net.FlagUp) == net.FlagUp 
+    return (l.Interface.Flags & net.FlagUp) == net.FlagUp
 }

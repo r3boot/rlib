@@ -8,7 +8,12 @@ import (
 )
 
 func PidOf (cmd string) (pid int, err error) {
-    raw_max_pid, err := GetSysctl("kernel.pid_max")
+    sysctl, err := SysctlFactory()
+    if err != nil {
+        return
+    }
+
+    raw_max_pid, err := sysctl.Get("kernel.pid_max")
     if err != nil {
         err = errors.New("Failed to retrieve kernel.pid_max: " + err.Error())
         return

@@ -2,6 +2,7 @@ package network
 
 import (
     "errors"
+    "net"
     "strconv"
     "strings"
     "github.com/r3boot/rlib/sys"
@@ -16,8 +17,13 @@ func (l Link) HasCarrier () (result bool, err error) {
     for _, line := range stdout {
         if strings.Contains(line, IFCONFIG_STATUS) {
             status := strings.Split(line, " ")[1]
-            result = status == (IFCONFIG_CARRIER_ACTIVE || IFCONFIG_CARRIER_ASSOCIATED)
-            return
+            if status == IFCONFIG_CARRIER_ACTIVE {
+                result = true
+                return
+            } else if status == IFCONFIG_CARRIER_ASSOCIATED {
+                result = true
+                return
+            }
         }
     }
 
@@ -26,18 +32,13 @@ func (l Link) HasCarrier () (result bool, err error) {
 }
 
 func (l Link) SetLinkStatus (link_status byte) (err error) {
-    carrier, err := l.HasCarrier()
-    if err != nil {
-        return
-    }
-
     var status string
     if link_status == LINK_UP {
         status = "up"
     } else if link_status == LINK_DOWN {
         status = "down"
     } else {
-        err = errors.New("Unknown link status: " + + strconv.Itoa(int(link_status)))
+        err = errors.New("Unknown link status: " + strconv.Itoa(int(link_status)))
         return
     }
 
@@ -46,12 +47,7 @@ func (l Link) SetLinkStatus (link_status byte) (err error) {
 }
 
 func (l Link) GetType () (intf_type byte, err error) {
-    has_link, err := l.HasLink()
-    if err != nil {
-        return
-    }
-
-    if ! has_link {
+    if ! l.HasLink() {
         if err = l.SetLinkStatus(LINK_UP); err != nil {
             return
         }
@@ -84,16 +80,16 @@ func (l Link) GetMtu () (mtu int, err error) {
     }
 
     raw_mtu := strings.Fields(stdout[0])[5]
-    mtu, err = strconv.Itoa(raw_mtu)
+    mtu, err = strconv.Atoi(raw_mtu)
     return
 }
 
 func (l Link) SetMtu (mtu int) (err error) {
-    _, _, err := sys.Run(l.CmdIfconfig, l.Interface.Name, "mtu", strconv.Itoa(mtu))
+    _, _, err = sys.Run(l.CmdIfconfig, l.Interface.Name, "mtu", strconv.Itoa(mtu))
     return
 }
 
-func LinkFactory(intf net.Interface) (l Link, err error) {
+func LinkFactory (intf net.Interface) (l Link, err error) {
     ifconfig, err := sys.BinaryPrefix("ifconfig")
     if err != nil {
         return

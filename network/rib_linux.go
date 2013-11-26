@@ -6,7 +6,6 @@ import (
     "net"
     "strconv"
     "strings"
-    "github.com/r3boot/rlib/sys"
 )
 
 func (r RIB) GetRoute (network net.IPNet) (result Route, err error) {

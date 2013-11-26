@@ -2,7 +2,6 @@ package network
 
 import (
     "net"
-    "github.com/r3boot/rlib/sys"
 )
 
 func (i Ip) FlushAddresses (af byte, err error) {

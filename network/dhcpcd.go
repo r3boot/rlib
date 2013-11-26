@@ -6,6 +6,7 @@ import (
     "io/ioutil"
     "os"
     "strings"
+    "github.com/r3boot/rlib/sys"
 )
 
 type Dhcpcd struct {
@@ -34,7 +35,7 @@ func (d Dhcpcd) Start () (err error) {
 
     args = append(args, d.Interface)
 
-    _, _, err := sys.Run(d.CmdDhcpcd, args...)
+    _, _, err = sys.Run(d.CmdDhcpcd, args...)
     if err != nil {
         err = errors.New("Failed to start dhcpcd: " + err.Error())
     }
@@ -45,12 +46,12 @@ func (d Dhcpcd) Start () (err error) {
 /*
  * Stop dhcpcd on intf. Print an error if anything goes wrong
  */
-func (d Dhcpcd) Stop () {
-    myname := "Dhcpcd.Stop"
-    _, _, err := sys.Run(d.CmdDhcpcd, "-k", d.Interface)
+func (d Dhcpcd) Stop () (err error) {
+    _, _, err = sys.Run(d.CmdDhcpcd, "-k", d.Interface)
     if err != nil {
-        Log.Warning(myname, "Failed to stop dhcpcd")
+        err = errors.New("Failed to stop dhcpcd: " + err.Error())
     }
+    return
 }
 
 /*

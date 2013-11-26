@@ -5,7 +5,7 @@ type Sysctl struct {
 }
 
 func (s Sysctl) Set (key string, value string) (err error) {
-    _, _, err := Run(s.CmdSysctl, "-w", key, "=", value)
+    _, _, err = Run(s.CmdSysctl, "-w", key, "=", value)
     return
 }
 

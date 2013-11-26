@@ -1,10 +1,10 @@
 package network
 
 import (
-    "errors"
     "net"
     "strings"
     "strconv"
+    "github.com/r3boot/rlib/sys"
 )
 
 /*

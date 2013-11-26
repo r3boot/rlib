@@ -100,13 +100,10 @@ func (w WpaSupplicant) Scan () {
  * Process the scan results from wpa_cli scan and return an array
  * of WirelessNetwork
  */
-func (w WpaSupplicant) AvailableNetworks () (nets []WirelessNetwork) {
-    myname := "WpaSupplicant.AvailableNetworks"
-    Log.Debug(myname, "Scanning for available wireless networks")
-
+func (w WpaSupplicant) AvailableNetworks () (nets []WirelessNetwork, err error) {
     stdout, _, err := w.Run("scan_results")
     if err != nil {
-        Log.Fatal(myname, err.Error())
+        return
     }
 
     for _, line := range stdout {
@@ -119,16 +116,14 @@ func (w WpaSupplicant) AvailableNetworks () (nets []WirelessNetwork) {
         network.Ssid = t[4]
         network.Frequency, err = strconv.Atoi(t[1])
         if err != nil {
-            Log.Warning(myname, "Failed to parse frequency for " + t[4])
+            err = errors.New("Failed to parse frequency for " + t[4] + ": " + err.Error())
             continue
         }
         network.Signal, err = strconv.Atoi(t[2])
         if err != nil {
-            Log.Warning(myname, "Failed to parse signal for " + t[4])
             continue
         }
 
-        Log.Debug(myname, "Found wireless network (ssid: " + t[4] + ", freq: " + t[1] + "KHz, strengh: " + t[2] + "dB)")
         nets = append(nets, *network)
     }
 
@@ -142,10 +137,6 @@ func (w WpaSupplicant) AvailableNetworks () (nets []WirelessNetwork) {
  * to true.
  */
 func (w WpaSupplicant) ConfiguredNetworks () (nets []WirelessNetwork) {
-    myname := "WpaSupplicant.ConfiguredNetworks"
-
-    Log.Debug(myname, "Looking up configured wireless networks")
-
     stdout, _, err := w.Run("list_networks")
     if err != nil {
         log.Fatal(err)
@@ -160,15 +151,12 @@ func (w WpaSupplicant) ConfiguredNetworks () (nets []WirelessNetwork) {
         var network = new(WirelessNetwork)
         network.Id, err = strconv.Atoi(t[0])
         if err != nil {
-            Log.Warning(myname, "Failed to parse network id for " + t[1] + ", skipping")
             continue
         }
         network.Ssid = t[1]
         if t[3] == "[CURRENT]" {
             network.Connected = true
         }
-
-        Log.Debug(myname, "Found configuration for " + network.Ssid)
 
         nets = append(nets, *network)
     }
@@ -180,11 +168,12 @@ func (w WpaSupplicant) ConfiguredNetworks () (nets []WirelessNetwork) {
  * Look at the cross-section between the available and configured wireless
  * networks, and return a list of WirelessNetwork of usable networks.
  */
-func (w WpaSupplicant) GetUsableNetworks () (nets []WirelessNetwork) {
-    myname := "WpaSupplicant.GetUsableNetworks"
-    Log.Debug(myname, "Creating list of usable wireless networks")
+func (w WpaSupplicant) GetUsableNetworks () (nets []WirelessNetwork, err error) {
+    available_networks, err := w.AvailableNetworks()
+    if err != nil {
+        return
+    }
 
-    available_networks := w.AvailableNetworks()
     configured_networks := w.ConfiguredNetworks()
 
     for _, available := range available_networks {
@@ -205,9 +194,6 @@ func (w WpaSupplicant) GetUsableNetworks () (nets []WirelessNetwork) {
  * Connect to an ssid. Return true if wireless is established, false otherwise
  */
 func (w WpaSupplicant) Connect(id int) bool {
-    myname := "WpaSupplicant.Connect"
-
-    Log.Debug(myname, "Connecting to wireless network")
     var timeout_counter int = 0
 
     if w.IsConnected() {
@@ -239,19 +225,26 @@ func (w WpaSupplicant) Connect(id int) bool {
  * Connect to the first usable wireless network. Return true if wireless
  * is established, false otherwise.
  */
-func (w WpaSupplicant) ConnectAny () bool {
+func (w WpaSupplicant) ConnectAny () (result bool, err error) {
     if w.IsConnected() {
-        return true
+        result = true
+        return
     }
 
-    wireless_networks := w.GetUsableNetworks()
+    wireless_networks, err := w.GetUsableNetworks()
+    if err != nil {
+        return
+    }
+
     for _, network := range wireless_networks {
         if w.Connect(network.Id) {
-            return true
+            result = true
+            return
         }
     }
 
-    return false
+    err = errors.New("Failed to connect to a wireless network")
+    return
 }
 
 func WpaSupplicantFactory (intf string) (w WpaSupplicant, err error) {

@@ -3,7 +3,6 @@ package sys
 import (
     "errors"
     "strings"
-    "github.com/r3boot/rlib/sys"
 )
 
 type UnameInfo struct {

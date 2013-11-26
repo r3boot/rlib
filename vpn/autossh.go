@@ -17,6 +17,8 @@ type AutoSSH struct {
     ConfigFile  string
     AgentFile   string
     EchoPort    int
+    CmdAutossh  string
+    CmdSsh      string
 }
 
 func (assh *AutoSSH) Start () (err error) {
@@ -28,7 +30,7 @@ func (assh *AutoSSH) Start () (err error) {
         return
     }
 
-    err = sys.Start("/usr/bin/autossh", "-M", strconv.Itoa(a.EchoPort), "-f", "-F", a.ConfigFile , "-N", "-y", a.Name)
+    err = sys.Start(a.CmdAutossh, "-M", strconv.Itoa(a.EchoPort), "-f", "-F", a.ConfigFile , "-N", "-y", a.Name)
     if err != nil {
         err = errors.New("Failed to start AutoSSH for " + a.Name + ": " + err.Error())
     }
@@ -59,7 +61,7 @@ func (assh *AutoSSH) Stop () (err error) {
 func (assh *AutoSSH) GetPid () (assh_pid, ssh_pid int, err error) {
     a := *assh
 
-    cmdline := "/usr/bin/autossh -M " + strconv.Itoa(a.EchoPort) + " -F " + a.ConfigFile + " -N -y " + a.Name
+    cmdline := a.CmdAutossh + " -M " + strconv.Itoa(a.EchoPort) + " -F " + a.ConfigFile + " -N -y " + a.Name
     assh_pid, err = sys.PidOf(cmdline)
     if err != nil {
         assh_pid = 0
@@ -68,7 +70,7 @@ func (assh *AutoSSH) GetPid () (assh_pid, ssh_pid int, err error) {
 
     eq := strconv.Itoa(a.EchoPort)
     er := strconv.Itoa(a.EchoPort + 1)
-    cmdline = "/usr/bin/ssh -L " + eq + ":127.0.0.1:" + eq + " -R " + eq + ":127.0.0.1:" + er + " -F " + a.ConfigFile + " -N -y " + a.Name
+    cmdline = a.CmdSsh + " -L " + eq + ":127.0.0.1:" + eq + " -R " + eq + ":127.0.0.1:" + er + " -F " + a.ConfigFile + " -N -y " + a.Name
     assh_pid, err = sys.PidOf(cmdline)
     if err != nil {
         assh_pid = 0
@@ -156,7 +158,18 @@ func (assh *AutoSSH) ReadConfig () (err error) {
 }
 
 func AutoSSHFactory (id int, name, runas string) (a AutoSSH, err error) {
-    a = AutoSSH{Id: id, Name: name, RunAs: runas}
+    autossh, err := sys.BinaryPrefix("autossh")
+    if err != nil {
+        return
+    }
+
+    ssh, err := sys.BinaryPrefix("ssh")
+    if err != nil {
+        return
+    }
+
+    a = AutoSSH{Id: id, Name: name, RunAs: runas, CmdAutossh: autossh, CmdSsh: ssh}
+
     err = a.ReadConfig()
 
     return
