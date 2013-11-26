@@ -6,6 +6,14 @@ import (
     "strconv"
 )
 
+type Route struct {
+    Destination net.IPNet
+    Gateway     net.IP
+}
+
+type RIB struct {
+}
+
 func (r RIB) GetDefaultRoute (af byte) (route Route, err error) {
     var n string
     if af == AF_INET {

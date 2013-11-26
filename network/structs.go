@@ -1,9 +1,5 @@
 package network
 
-import (
-    "net"
-)
-
 const WPA_STATE_COMPLETED = "COMPLETED"
 const WPA_SCAN_INTERVAL = 5
 const WPA_CONNECT_INTERVAL = 500
@@ -37,15 +33,11 @@ const IP_USE_AF_INET6 string = "-6"
 
 const IFCONFIG_USE_AF_INET string = "inet"
 const IFCONFIG_USE_AF_INET6 string = "inet6"
-
-type Ip struct {
-    Interface   string
-}
-
-type Route struct {
-    Destination net.IPNet
-    Gateway     net.IP
-}
-
-type RIB struct {
-}
+const IFCONFIG_ND6_OPTIONS string = "nd6 options"
+const IFCONFIG_ACCEPT_RTADV string = "ACCEPT_RTADV"
+const IFCONFIG_ENABLE_RTADV string = "accept_rtadv"
+const IFCONFIG_CARRIER_ACTIVE string = "active"
+const IFCONFIG_CARRIER_ASSOCIATED string = "associated"
+const IFCONFIG_STATUS string = "status"
+const IFCONFIG_MEDIA_ETHERNET string = "media: Ethernet"
+const IFCONFIG_MEDIA_WIRELESS string = "media: IEEE 802.11"

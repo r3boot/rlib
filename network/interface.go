@@ -16,7 +16,22 @@ type Interface struct {
 }
 
 func InterfaceFactory (intf net.Interface) (i Interface, err error) {
+    ip, err := IpFactory(intf.Name)
+    if err != nil {
+        return
+    }
+
+    ra, err := RAFactory(intf.Name)
+    if err != nil {
+        return
+    }
+
     wpa_supplicant, err := WpaSupplicantFactory(intf.Name)
+    if err != nil {
+        return
+    }
+
+    dhcpcd, err := DhcpcdFactory(intf.Name)
     if err != nil {
         return
     }
@@ -25,10 +40,10 @@ func InterfaceFactory (intf net.Interface) (i Interface, err error) {
         intf,
         INTF_TYPE_UNKNOWN,
         Link{Interface: intf},
-        RA{Interface: intf.Name},
-        Ip{Interface: intf.Name},
+        ra,
+        ip,
         wpa_supplicant,
-        Dhcpcd{Interface: intf.Name},
+        dhcpcd,
         ResolvConf{Interface: intf.Name},
     }
 

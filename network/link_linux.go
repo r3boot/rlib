@@ -7,51 +7,36 @@ import (
     "github.com/r3boot/rlib/sys"
 )
 
-type Link struct {
-    Interface net.Interface
-}
-
-/*
- * Check link status of interface. Returns true if interface is up, else
- * returns false.
- */
-func (l Link) HasLink () bool {
-    return (l.Interface.Flags & net.FlagUp) == net.FlagUp 
-}
-
 /*
  * Open /sys/class/net/<interface>/carrier and determine link status. Return
  * true if the content equals "1" (0x31), false otherwise. If the carrier file
  * cannot be read, return an error.
  */
-func (l Link) HasCarrier () bool {
+func (l Link) HasCarrier () (result bool, err error) {
     carrier_file := "/sys/class/net/" + l.Interface.Name + "/carrier"
 
     content, err := ioutil.ReadFile(carrier_file)
     if err != nil {
-        return false
+        return
     }
 
-    return content[0] == LINK_UP
+    result = content[0] == LINK_UP
+    return
 }
 
-func (l Link) SetLinkStatus (link_status byte) {
-    myname := "nic.setLinkStatus"
-
+func (l Link) SetLinkStatus (link_status byte) (err error) {
     var status string
     if link_status == LINK_UP {
         status = "up"
     } else if link_status == LINK_DOWN {
         status = "down"
     } else {
-        Log.Fatal(myname, "Unknown link_status: " + strconv.Itoa(int(link_status)) + ", ignoring")
+        err = errors.New("Unknown link status: " + + strconv.Itoa(int(link_status)))
         return
     }
 
     _, _, err := sys.Run("/sbin/ip", "link", "set", l.Interface.Name, status)
-    if err != nil {
-        Log.Warning(myname, "Failed to set link status for " + l.Interface.Name)
-    }
+    return
 }
 
 /*
@@ -61,9 +46,16 @@ func (l Link) SetLinkStatus (link_status byte) {
  * device. If * this is "20000", it's an ethernet nic, if it's "28000", it's
  * a wireless nic. All other pci classes get flagged unknown.
  */
-func (l Link) GetType () (intf_type byte) {
-    if ! l.HasLink() {
-        l.SetLinkStatus(LINK_UP)
+func (l Link) GetType () (intf_type byte, err error) {
+    has_link, err := l.HasLink()
+    if err != nil {
+        return
+    }
+
+    if ! has_link {
+        if err = l.SetLinkStatus(LINK_UP); err != nil {
+            return
+        }
     }
 
     flags_file := "/sys/class/net/" + l.Interface.Name + "/type"

@@ -4,28 +4,30 @@ import (
     "github.com/r3boot/rlib/sys"
 )
 
-type RA struct {
-    Interface string
-}
-
-func (r RA) AcceptsRA () bool {
+func (r RA) AcceptsRA () (result bool, err error) {
     value, err := sys.GetSysctl("net.ipv6.conf." + r.Interface + ".accept_ra")
     if err != nil {
-        return false
+        return
     }
 
-    return value[0] == sys.SYSCTL_ONE
+    result = value[0] == sys.SYSCTL_ONE
+    return
 }
 
 func (r RA) EnableRA () {
-    if r.AcceptsRA() {
+    if ! r.AcceptsRA() {
         sys.SetSysctl("net.ipv6.conf." + r.Interface + ".accept_ra", "1")
     }
 }
 
 func (r RA) DisableRA () {
-   if ! r.AcceptsRA() {
+   if r.AcceptsRA() {
         sys.SetSysctl("net.ipv6.conf." + r.Interface + ".accept_ra", "0")
     }
 }
 
+func RAFactory (intf string) (r RA, err error) {
+    r = RA{intf, nil}
+
+    return
+}

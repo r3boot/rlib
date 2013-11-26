@@ -6,20 +6,19 @@ import (
     "io/ioutil"
     "os"
     "strings"
-    "github.com/r3boot/rlib/sys"
 )
 
 type Dhcpcd struct {
     Interface       string
     SetMtu          bool
     UseResolvconf   bool
+    CmdDhcpcd       string
 }
 
 /*
  * Start dhcpcd on intf. Print an error if anything goes wrong
  */
-func (d Dhcpcd) Start () {
-    myname := "Dhcpcd.Start"
+func (d Dhcpcd) Start () (err error) {
     var args []string
     args = append(args, "-q")
 
@@ -35,10 +34,12 @@ func (d Dhcpcd) Start () {
 
     args = append(args, d.Interface)
 
-    _, _, err := sys.Run("/usr/sbin/dhcpcd", args...)
+    _, _, err := sys.Run(d.CmdDhcpcd, args...)
     if err != nil {
-        Log.Warning(myname, "Failed to start dhcpcd")
+        err = errors.New("Failed to start dhcpcd: " + err.Error())
     }
+
+    return
 }
 
 /*
@@ -46,7 +47,7 @@ func (d Dhcpcd) Start () {
  */
 func (d Dhcpcd) Stop () {
     myname := "Dhcpcd.Stop"
-    _, _, err := sys.Run("/usr/sbin/dhcpcd", "-k", d.Interface)
+    _, _, err := sys.Run(d.CmdDhcpcd, "-k", d.Interface)
     if err != nil {
         Log.Warning(myname, "Failed to stop dhcpcd")
     }
@@ -85,7 +86,7 @@ func (d Dhcpcd) IsRunning () bool {
 }
 
 func (d Dhcpcd) GetOffer () (ip net.IP, network net.IPNet, err error) {
-    stdout, _, err := sys.Run("/usr/sbin/dhcpcd", "-4", "-T", d.Interface)
+    stdout, _, err := sys.Run(d.CmdDhcpcd, "-4", "-T", d.Interface)
     if err != nil {
         return
     }
@@ -113,6 +114,17 @@ func (d Dhcpcd) GetOffer () (ip net.IP, network net.IPNet, err error) {
         ip = i
         network = *n
     }
+
+    return
+}
+
+func DhcpcdFactory (intf string) (d Dhcpcd, err error) {
+    dhcpcd, err := sys.BinaryPrefix("dhcpcd")
+    if err != nil {
+        return
+    }
+
+    d = Dhcpcd{intf, false, false, dhcpcd}
 
     return
 }
