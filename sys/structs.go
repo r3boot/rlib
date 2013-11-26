@@ -8,6 +8,9 @@ const LSB_D_ID          string = "DISTRIB_ID"
 const LSB_D_RELEASE     string = "DISTRIB_RELEASE"
 const LSB_D_DESCRIPTION string = "DISTRIB_DESCRIPTION"
 
+const UNAME_LINUX       string = "Linux"
+const UNAME_FREEBSD     string = "FreeBSD"
+
 const DISTRO_ARCHLINUX  string = "arch"
 
 const PASSWD_USERNAME   int = 0

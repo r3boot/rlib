@@ -1,7 +1,7 @@
 package ssm
 
 import (
-    "github.com/r3boot/rlib/sys"
+    "errors"
 )
 
 type Manager interface {
@@ -14,13 +14,28 @@ type Manager interface {
     IsEnabled(name string) (result bool)
 }
 
-func ManagerFactory () (m Manager) {
-    myname := "ssm.ManagerFactory"
+func ManagerFactory () (m Manager, err error) {
+    uname, err := sys.Uname()
     lsb := sys.LSBFactory()
-    if lsb.Id == sys.DISTRO_ARCHLINUX {
-        m = Manager(Systemd{})
+
+    if uname.Ident == UNAME_LINUX {
+        if lsb.Id == sys.DISTRO_ARCHLINUX {
+            systemd, err := SystemdFactory()
+            if err != nil {
+                return
+            }
+            m = Manager(systemd)
+        } else {
+            err = errors.New("Unsupported distro")
+        }
+    } else if uname.Ident == UNAME_FREEBSD {
+        service, err := ServiceFactory()
+        if err != nil {
+            return
+        }
+        m = Manager(service)
     } else {
-        Log.Warning(myname, "Unsupported distro")
+        err = errors.New("Unknown UNIX release")
     }
     return
 }
