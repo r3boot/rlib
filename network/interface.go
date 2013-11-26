@@ -16,6 +16,11 @@ type Interface struct {
 }
 
 func InterfaceFactory (intf net.Interface) (i Interface, err error) {
+    link, err := LinkFactory(intf)
+    if err != nil {
+        return
+    }
+
     ip, err := IpFactory(intf.Name)
     if err != nil {
         return
@@ -36,15 +41,20 @@ func InterfaceFactory (intf net.Interface) (i Interface, err error) {
         return
     }
 
+    resolvconf, err := ResolvConfFactory(intf.Name)
+    if err != nil {
+        return
+    }
+
     i = Interface{
         intf,
         INTF_TYPE_UNKNOWN,
-        Link{Interface: intf},
+        link,
         ra,
         ip,
         wpa_supplicant,
         dhcpcd,
-        ResolvConf{Interface: intf.Name},
+        resolvconf,
     }
 
     i.Type = i.GetType()

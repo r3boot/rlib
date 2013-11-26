@@ -7,13 +7,15 @@ import (
 )
 
 type ResolvConf struct {
-    Interface string
-    Nameservers []net.IP
-    Search string
+    Interface       string
+    Search          string
+    Nameservers     []net.IP
+    CmdResolvconf   string
 }
 
 func (rc *ResolvConf) UpdateResolvConf () (err error) {
-    _, _, err = sys.Run("/sbin/resolvconf", "-u")
+    r := *rc
+    _, _, err = sys.Run(r.CmdResolvconf, "-u")
     return
 }
 
@@ -28,7 +30,7 @@ func (rc *ResolvConf) AddConfig () {
         stdin = append(stdin, "nameserver " + nameserver.String() + "\n"...)
     }
 
-    _, _, err := sys.RunWithInput(bytes.NewReader(stdin), "/sbin/resolvconf", "-a", r.Interface)
+    _, _, err := sys.RunWithInput(bytes.NewReader(stdin), r.CmdResolvconf, "-a", r.Interface)
     if err != nil {
         Log.Warning(myname, "Failed to add config for " + r.Interface + ": " + err.Error())
         return
@@ -46,7 +48,7 @@ func (rc *ResolvConf) RemoveConfig () {
     myname := "ResolvConf.RemoveConfig"
     r := *rc
 
-    _, _, err := sys.Run("/sbin/resolvconf", "-d", r.Interface)
+    _, _, err := sys.Run(r.CmdResolvconf, "-d", r.Interface)
     if err != nil {
         Log.Warning(myname, "Failed to remove config for " + r.Interface + ": " + err.Error())
     }
@@ -59,12 +61,13 @@ func (rc *ResolvConf) RemoveConfig () {
     *rc = r
 }
 
-func ResolvConfFactory (intf, search string, servers []net.IP) (r ResolvConf) {
-    r.Interface = intf
-    r.Search = search
-    for _, server := range servers {
-        r.Nameservers = append(r.Nameservers, server)
+func ResolvConfFactory (intf string) (r ResolvConf, err error) {
+    resolvconv, err := sys.BinaryPrefix("resolvconf")
+    if err != nil {
+        return
     }
+
+    r = ResolvConf(intf, nil, make([]string), resolvconf)
 
     return
 }
