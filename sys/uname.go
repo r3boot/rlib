@@ -6,14 +6,22 @@ import (
     "github.com/r3boot/rlib/sys"
 )
 
+type UnameInfo struct {
+    Hostname    string
+    Ident       string
+    Release     string
+    Version     string
+    Platform    string
+}
+
 func Uname () (u UnameInfo, err error) {
     var uname string
-    uname, err = sys.BinaryPrefix("uname")
+    uname, err = BinaryPrefix("uname")
     if err != nil {
         return
     }
 
-    stdout, _, err := sys.Run(uname, "-srpn")
+    stdout, _, err := Run(uname, "-srpn")
     if err != nil {
         return
     }
@@ -24,7 +32,7 @@ func Uname () (u UnameInfo, err error) {
     u.Release = t[2]
     u.Platform = t[3]
 
-    stdout, _, err = sys.Run(uname, "-v")
+    stdout, _, err = Run(uname, "-v")
     if err != nil {
         err = errors.New("Failed to find version info")
         return

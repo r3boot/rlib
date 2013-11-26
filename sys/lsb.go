@@ -1,6 +1,7 @@
 package sys
 
 import (
+    "errors"
     "io/ioutil"
     "strconv"
     "strings"
@@ -13,18 +14,17 @@ type LSB struct {
     LsbVersion  float64
 }
 
-func LSBFactory () (l LSB) {
-    myname := "sys.LSBFactory"
+func LSBFactory () (l LSB, err error) {
     lsb_file := "/etc/lsb-release"
 
     if ! FileExists(lsb_file) {
-        Log.Warning(myname, "Failed to locate LSB file " + lsb_file)
+        err = errors.New("Failed to locate LSB file " + lsb_file)
         return
     }
 
     content, err := ioutil.ReadFile(lsb_file)
     if err != nil {
-        Log.Warning(myname, "Failed to read LSB file " + lsb_file + ": " + err.Error())
+        err = errors.New("Failed to read LSB file " + lsb_file + ": " + err.Error())
     }
 
     for _, line := range strings.Split(string(content), "\n") {
@@ -33,7 +33,7 @@ func LSBFactory () (l LSB) {
             case LSB_VERSION: {
                 l.LsbVersion, err = strconv.ParseFloat(t[1], 64)
                 if err != nil {
-                    Log.Warning(myname, "Failed to parse float: " + err.Error())
+                    err = errors.New("Failed to parse float: " + err.Error())
                     l = LSB{}
                     return
                 }

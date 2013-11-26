@@ -37,7 +37,8 @@ func PidOf (cmd string) (pid int, err error) {
         }
 
         cmdline = strings.Replace(cmdline, "\000", "", -1)
-        
+        cmdline = strings.Replace(cmdline, " ", "", -1)
+
         if cmdline == proc_cmd {
             return
         }
