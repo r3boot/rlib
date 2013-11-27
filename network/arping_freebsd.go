@@ -21,7 +21,7 @@ func Arping(ipaddr net.IP, intf net.Interface, count int) (up bool, latency floa
         return
     }
 
-    stdout, _, err := sys.Run(arping, "-I", intf.Name, "-w", "3000", "-c", strconv.Itoa(count), ipaddr.String())
+    stdout, _, err := sys.Run(arping, "-I", intf.Name, "-c", strconv.Itoa(count), ipaddr.String())
 
     var tot_latency float64 = 0
 

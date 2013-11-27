@@ -21,12 +21,13 @@ type OpenVPN struct {
     StatusFile      string
     Remote          net.IP
     Port            int
+    CmdOpenvpn      string
 }
 
 func (ovpn *OpenVPN) Start () (err error) {
     o := *ovpn
 
-    _, _, err = sys.Run("/usr/sbin/openvpn", "--daemon", "--config", o.ConfigFile, "--writepid", o.PidFile)
+    _, _, err = sys.Run(o.CmdOpenvpn, "--daemon", "--config", o.ConfigFile, "--writepid", o.PidFile)
     if err != nil {
         err = errors.New("Failed to start OpenVPN: " + err.Error())
         return
@@ -214,6 +215,11 @@ func (ovpn *OpenVPN) ReadConfig () (err error) {
 func OpenVPNFactory (name string) (o OpenVPN, err error) {
     o = *new(OpenVPN)
 
+    openvpn, err := sys.BinaryPrefix("openvpn")
+    if err != nil {
+        return
+    }
+
     cfg_file, err := sys.ConfigPrefix("openvpn/" + name + ".conf")
     if err != nil {
         return
@@ -227,6 +233,7 @@ func OpenVPNFactory (name string) (o OpenVPN, err error) {
     o.StatusFile = "/var/run/openvpn-" + name + ".status"
     o.Remote = net.IP{}
     o.Port = 1900
+    o.CmdOpenvpn = openvpn
 
     o.ReadConfig()
 
