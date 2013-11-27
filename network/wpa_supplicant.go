@@ -2,7 +2,6 @@ package network
 
 import (
     "errors"
-    "log"
     "strings"
     "strconv"
     "time"
@@ -44,7 +43,7 @@ func (w WpaSupplicant) Start () (err error) {
         w.Interface, "-c", w.CfgFile)
 
     if err != nil {
-        log.Print(err)
+        return
     }
 
     return
@@ -139,7 +138,7 @@ func (w WpaSupplicant) AvailableNetworks () (nets []WirelessNetwork, err error) 
 func (w WpaSupplicant) ConfiguredNetworks () (nets []WirelessNetwork) {
     stdout, _, err := w.Run("list_networks")
     if err != nil {
-        log.Fatal(err)
+        return
     }
 
     for _, line := range stdout {

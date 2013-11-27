@@ -3,7 +3,6 @@ package network
 import (
     "errors"
     "net"
-    "log"
     "strconv"
     "strings"
     "github.com/r3boot/rlib/sys"
@@ -33,10 +32,8 @@ func (r RIB) GetRoute (network net.IPNet) (result Route, err error) {
 
         route, e := parseRoutingLine(af, line)
         if e != nil {
-            log.Print(e)
             continue
         }
-        log.Print(route)
 
         if (network.IP.Equal(route.Destination.IP)) &&
             (network.Mask.String() == route.Destination.Mask.String()) {
@@ -58,7 +55,6 @@ func (r RIB) AddRoute (network net.IPNet, gateway net.IP) (err error) {
 
     use_af = "-" + use_af
 
-    log.Print(strings.Join([]string{"/sbin/route", "add", use_af, network.String(), gateway.String()}, " "))
     _, _, err = sys.Run("/sbin/route", "add", use_af, network.String(), gateway.String())
 
     return
@@ -72,7 +68,6 @@ func (r RIB) RemoveRoute (network net.IPNet) (err error) {
 
     use_af = "-" + use_af
 
-    log.Print(strings.Join([]string{"/sbin/route", "delete", use_af, network.String()}, " "))
     _, _, err = sys.Run("/sbin/route", "delete", use_af, network.String())
 
     return

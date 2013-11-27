@@ -12,8 +12,7 @@ type Manager interface {
     Enable (name string) (err error)
     Disable (name string) (err error)
     IsRunning (name string) (result bool, err error)
-    IsEnabled(name string) (result bool, err error)
-    Setup () (err error)
+    IsEnabled (name string) (result bool, err error)
 }
 
 func ManagerFactory () (m Manager, err error) {
@@ -26,14 +25,23 @@ func ManagerFactory () (m Manager, err error) {
         }
 
         if lsb.Id == sys.DISTRO_ARCHLINUX {
-            m = Manager(Systemd{})
+            systemd := new(Systemd)
+            if err = systemd.Setup(); err != nil {
+                err = errors.New("Failed to initialize systemd: " + err.Error())
+            }
+            m = Manager(systemd)
         } else {
-            err = errors.New("Unsupported distro")
+            err = errors.New("Unsupported Linux distro")
         }
     } else if uname.Ident == sys.UNAME_FREEBSD {
-        m = Manager(Service{})
+        service := new(Service)
+        if err = ServiceSetup(); err != nil {
+            err = errors.New("Failed to initialize service: " + err.Error())
+        }
+        m = Manager(service)
     } else {
         err = errors.New("Unknown UNIX release")
     }
+
     return
 }

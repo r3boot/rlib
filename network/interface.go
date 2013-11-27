@@ -1,7 +1,6 @@
 package network
 
 import (
-    "log"
     "errors"
     "net"
 )
@@ -74,8 +73,6 @@ func InterfaceFactory (intf net.Interface) (i Interface, err error) {
         return
     }
     i.Resolvconf = resolvconf
-
-    log.Print(i)
 
     return
 }

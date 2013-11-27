@@ -2,7 +2,6 @@ package network
 
 import (
     "errors"
-    "log"
     "net"
     "strconv"
     "strings"
@@ -34,7 +33,6 @@ func (l Link) HasCarrier () (result bool, err error) {
 }
 
 func (l Link) SetLinkStatus (link_status byte) (err error) {
-    log.Print(l)
     var status string
     if link_status == LINK_UP {
         status = "up"
