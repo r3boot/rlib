@@ -4,6 +4,7 @@ import (
     "errors"
     "net"
     "os"
+    "log"
     "io/ioutil"
     "strconv"
     "strings"
@@ -62,6 +63,7 @@ func (assh *AutoSSH) GetPid () (assh_pid, ssh_pid int, err error) {
     a := *assh
 
     cmdline := a.CmdAutossh + " -M " + strconv.Itoa(a.EchoPort) + " -F " + a.ConfigFile + " -N -y " + a.Name
+    log.Print(cmdline)
     assh_pid, err = sys.PidOf(cmdline)
     if err != nil {
         assh_pid = 0
@@ -158,6 +160,8 @@ func (assh *AutoSSH) ReadConfig () (err error) {
 }
 
 func AutoSSHFactory (id int, name, runas string) (a AutoSSH, err error) {
+    a = *new(AutoSSH)
+
     autossh, err := sys.BinaryPrefix("autossh")
     if err != nil {
         return
@@ -168,7 +172,11 @@ func AutoSSHFactory (id int, name, runas string) (a AutoSSH, err error) {
         return
     }
 
-    a = AutoSSH{Id: id, Name: name, RunAs: runas, CmdAutossh: autossh, CmdSsh: ssh}
+    a.Id = id
+    a.Name = name
+    a.RunAs = runas
+    a.CmdAutossh = autossh
+    a.CmdSsh = ssh
 
     err = a.ReadConfig()
 

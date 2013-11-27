@@ -10,11 +10,13 @@ func (s Sysctl) Set (key string, value string) (err error) {
 }
 
 func SysctlFactory () (s Sysctl, err error) {
+    s = *new(Sysctl)
+
     sysctl, err := BinaryPrefix("sysctl")
     if err != nil {
         return
     }
 
-    s = Sysctl{sysctl}
+    s.CmdSysctl = sysctl
     return
 }

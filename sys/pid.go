@@ -8,15 +8,32 @@ import (
 )
 
 func PidOf (cmd string) (pid int, err error) {
+    var raw_max_pid []byte
+
     sysctl, err := SysctlFactory()
     if err != nil {
         return
     }
 
-    raw_max_pid, err := sysctl.Get("kernel.pid_max")
+    uname, err := Uname()
     if err != nil {
-        err = errors.New("Failed to retrieve kernel.pid_max: " + err.Error())
         return
+    }
+
+    if uname.Ident == UNAME_LINUX {
+        raw_max_pid, err = sysctl.Get("kernel.pid_max")
+        if err != nil {
+            err = errors.New("Failed to retrieve kernel.pid_max: " + err.Error())
+            return
+        }
+    } else if uname.Ident == UNAME_FREEBSD {
+        raw_max_pid, err = sysctl.Get("kern.pid_max")
+        if err != nil {
+            err = errors.New("Failed to retrieve kern.pid_max: " + err.Error())
+            return
+        }
+    } else {
+        err = errors.New("Unsupported UNIX release")
     }
 
     max_pid, err := strconv.Atoi(strings.Split(string(raw_max_pid), "\n")[0])
