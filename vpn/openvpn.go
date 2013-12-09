@@ -158,7 +158,7 @@ func (ovpn *OpenVPN) IsConnected () (result bool, err error) {
         t := strings.Split(line, ",")
 
         if t[0] == OVPN_STATUS_UPDATE {
-            t_lastupdate, err = time.Parse("Mon Jan 02 15:04:05 2006", t[1])
+            t_lastupdate, err = time.Parse("Mon Jan  2 15:04:05 2006", t[1])
             if err != nil {
                 err = errors.New("Failed to parse date: " + err.Error())
                 return
