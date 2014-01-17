@@ -1,6 +1,7 @@
 package ssm
 
 import (
+    "log"
     "errors"
     "strings"
     "github.com/r3boot/rlib/sys"
@@ -27,7 +28,14 @@ func (s Service) Restart (name string) (err error) {
 }
 
 func (s Service) IsRunning (name string) (result bool, err error) {
-    stdout, _, _ := sys.Run(CmdService, name, "status")
+    stdout, stderr, err := sys.Run(CmdService, name, "status")
+    log.Print(CmdService)
+    log.Print(stdout)
+    log.Print(stderr)
+    if err != nil {
+        return
+    }
+
     if strings.Contains(stdout[0], SERVICE_SERVICE_RUNNING) {
         result = true
     } else if strings.Contains(stdout[0], SERVICE_SERVICE_NOT_RUNNING) {

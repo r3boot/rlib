@@ -1,9 +1,11 @@
 package network
 
 import (
-    "net"
+    "errors"
     "io/ioutil"
+    "net"
     "strconv"
+    "github.com/r3boot/rlib/sys"
 )
 
 /*
@@ -30,11 +32,11 @@ func (l Link) SetLinkStatus (link_status byte) (err error) {
     } else if link_status == LINK_DOWN {
         status = "down"
     } else {
-        err = errors.New("Unknown link status: " + + strconv.Itoa(int(link_status)))
+        err = errors.New("Unknown link status: " + strconv.Itoa(int(link_status)))
         return
     }
 
-    _, _, err := sys.Run("/sbin/ip", "link", "set", l.Interface.Name, status)
+    _, _, err = sys.Run("/sbin/ip", "link", "set", l.Interface.Name, status)
     return
 }
 
@@ -102,6 +104,20 @@ func (l Link) SetMTU (mtu int) (err error) {
         value := []byte(strconv.Itoa(mtu))
         err = ioutil.WriteFile(mtu_file, value, 0755)
     }
+
+    return
+}
+
+func LinkFactory (intf net.Interface) (l Link, err error) {
+    l = *new(Link)
+
+    ifconfig, err := sys.BinaryPrefix("ip")
+    if err != nil {
+        return
+    }
+
+    l.Interface = intf
+    l.CmdIfconfig = ifconfig
 
     return
 }

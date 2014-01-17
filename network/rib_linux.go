@@ -6,6 +6,7 @@ import (
     "net"
     "strconv"
     "strings"
+    "github.com/r3boot/rlib/sys"
 )
 
 func (r RIB) GetRoute (network net.IPNet) (result Route, err error) {
@@ -32,7 +33,7 @@ func (r RIB) GetRoute (network net.IPNet) (result Route, err error) {
         if (network.IP.Equal(route.Destination.IP)) &&
             (network.Mask.String() == route.Destination.Mask.String()) {
             result = route
-            return
+            return result, err
         }
     }
 
@@ -47,7 +48,7 @@ func (r RIB) AddRoute (network net.IPNet, gateway net.IP) (err error) {
         return
     }
 
-    _, _, err := sys.Run("/sbin/ip", use_af, "route", "add", network.String(),
+    _, _, err = sys.Run("/sbin/ip", use_af, "route", "add", network.String(),
         "via", gateway.String())
     if err != nil {
         return
@@ -62,7 +63,7 @@ func (r RIB) RemoveRoute (network net.IPNet) (err error) {
         return
     }
 
-    _, _, err := sys.Run("/sbin/ip", use_af, "route", "del", network.String())
+    _, _, err = sys.Run("/sbin/ip", use_af, "route", "del", network.String())
     if err != nil {
         return
     }

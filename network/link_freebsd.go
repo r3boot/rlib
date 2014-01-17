@@ -77,7 +77,7 @@ func (link *Link) GetType () (intf_type byte, err error) {
     return
 }
 
-func (l Link) GetMtu () (mtu int, err error) {
+func (l Link) GetMTU () (mtu int, err error) {
     stdout, _, err := sys.Run(l.CmdIfconfig, l.Interface.Name)
     if err != nil {
         return
@@ -88,7 +88,7 @@ func (l Link) GetMtu () (mtu int, err error) {
     return
 }
 
-func (l Link) SetMtu (mtu int) (err error) {
+func (l Link) SetMTU (mtu int) (err error) {
     _, _, err = sys.Run(l.CmdIfconfig, l.Interface.Name, "mtu", strconv.Itoa(mtu))
     return
 }
