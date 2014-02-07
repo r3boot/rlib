@@ -28,7 +28,8 @@ type WpaSupplicant struct {
  * Run a command through wpa_cli. Return an error if the return-code from
  * wpa_cli is non-zero.
  */
-func (w WpaSupplicant) Run (command string) (stdout, stderr []string, err error) {
+func (wpa *WpaSupplicant) Run (command string) (stdout, stderr []string, err error) {
+    w := *wpa
     stdout, stderr, err = sys.Run(w.CmdWpaCli, "-i" + w.Interface, command)
     return
 }
@@ -38,7 +39,8 @@ func (w WpaSupplicant) Run (command string) (stdout, stderr []string, err error)
  * it does not exist, return an error. If the returncode of the wpa_supplicant
  * is non-zero, return an error.
  */
-func (w WpaSupplicant) Start () (err error) {
+func (wpa *WpaSupplicant) Start () (err error) {
+    w := *wpa
     _, _, err = sys.Run(w.CmdWpaSupplicant, "-B", "-D" + w.Driver, "-i" +
         w.Interface, "-c", w.CfgFile)
 
@@ -257,7 +259,7 @@ func WpaSupplicantFactory (intf string) (w WpaSupplicant, err error) {
         return
     }
 
-    cfg_file, err := sys.ConfigPrefix("wpa_supplicant-" + intf + ".conf")
+    cfg_file, err := sys.ConfigPrefix("wpa_supplicant/wpa_supplicant-" + intf + ".conf")
     if err != nil {
         return
     }

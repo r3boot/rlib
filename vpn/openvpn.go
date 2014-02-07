@@ -123,12 +123,18 @@ func (ovpn *OpenVPN) IsRunning () (result bool, err error) {
     o := *ovpn
     pid, err := o.GetPid()
     if err != nil {
+        err = errors.New("Failed to find pid for openvpn")
+        return
+    }
+
+    if pid == 0 {
         return
     }
 
     proc_file := "/proc/" + strconv.Itoa(pid) + "/cmdline"
     content, err := ioutil.ReadFile(proc_file)
     if err != nil {
+        result = false
         return
     }
     ps := string(content)

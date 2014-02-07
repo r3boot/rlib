@@ -47,9 +47,11 @@ func (l Link) SetLinkStatus (link_status byte) (err error) {
  * device. If * this is "20000", it's an ethernet nic, if it's "28000", it's
  * a wireless nic. All other pci classes get flagged unknown.
  */
-func (l Link) GetType () (intf_type byte, err error) {
+func (link *Link) GetType () (intf_type byte, err error) {
+    l := *link
     if ! l.HasLink() {
         if err = l.SetLinkStatus(LINK_UP); err != nil {
+            err = errors.New("SetLinkStatus failed: " + err.Error())
             return
         }
     }
@@ -66,18 +68,37 @@ func (l Link) GetType () (intf_type byte, err error) {
         return
     }
 
-    class_file := "/sys/class/net/" + l.Interface.Name + "/device/class"
-    content, err = ioutil.ReadFile(class_file)
-    if err != nil {
-        return
+    flags_file = "/sys/class/net/" + l.Interface.Name + "/tun_flags"
+    if sys.FileExists(flags_file) {
+        content, err = ioutil.ReadFile(flags_file)
+        if err != nil {
+            return
+        }
+
+        value = string(content[2:5])
+        if value == LINK_TAP {
+            intf_type = INTF_TYPE_TAP
+            return
+        }
+    } else {
+
+        class_file := "/sys/class/net/" + l.Interface.Name + "/device/class"
+        content, err = ioutil.ReadFile(class_file)
+        if err != nil {
+            return
+        }
+
+        value = string(content[0:8])
+        if value == LINK_WIRELESS {
+            intf_type = INTF_TYPE_WIRELESS
+            return
+        } else if value == LINK_ETHERNET {
+            intf_type = INTF_TYPE_ETHERNET
+            return
+        }
     }
 
-    value = string(content[0:8])
-    if value == LINK_WIRELESS {
-        intf_type = INTF_TYPE_WIRELESS
-    } else if value == LINK_ETHERNET {
-        intf_type = INTF_TYPE_ETHERNET
-    }
+    err = errors.New("Unknown interface type")
 
     return
 }

@@ -7,3 +7,7 @@ const CMD_SYSTEMCTL string = "/sbin/systemctl"
 const SERVICE_SERVICE_RUNNING       string = " is running as pid "
 const SERVICE_SERVICE_NOT_RUNNING   string = " is not running"
 const SERVICE_SERVICE_NOT_ENABLED   string = "_enable to YES in"
+
+const SYSTEMD_SERVICE_RUNNING       string = " active (running)"
+const SYSTEMD_SERVICE_NOT_RUNNING   string = " inactive (dead)"
+const SYSTEMD_SERVICE_NOT_ENABLED   string = " ; enabled)"

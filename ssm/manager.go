@@ -26,12 +26,12 @@ func ManagerFactory () (m Manager, err error) {
 
         if lsb.Id == sys.DISTRO_ARCHLINUX {
             systemd := new(Systemd)
-            if err = systemd.Setup(); err != nil {
+            if err = SystemdSetup(); err != nil {
                 err = errors.New("Failed to initialize systemd: " + err.Error())
             }
             m = Manager(systemd)
         } else {
-            err = errors.New("Unsupported Linux distro")
+            err = errors.New("Unsupported Linux distro: (" + lsb.Id + ")")
         }
     } else if uname.Ident == sys.UNAME_FREEBSD {
         service := new(Service)

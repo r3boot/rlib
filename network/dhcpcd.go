@@ -86,8 +86,23 @@ func (d Dhcpcd) IsRunning () bool {
            strings.Contains(ps, d.Interface)
 }
 
+func (d Dhcpcd) RemoveLeaseFile () (err error) {
+    lease_file := "/var/lib/dhcpcd/dhcpcd-" + d.Interface + ".lease"
+    if sys.FileExists(lease_file) {
+        os.Remove(lease_file)
+    }
+
+    return
+}
+
 func (d Dhcpcd) GetOffer () (ip net.IP, network net.IPNet, err error) {
-    stdout, _, err := sys.Run(d.CmdDhcpcd, "-T", d.Interface)
+
+    if err = d.RemoveLeaseFile(); err != nil {
+        err = errors.New("Failed to remove lease file: " + err.Error())
+        return
+    }
+
+    stdout, _, err := sys.Run(d.CmdDhcpcd, "-4T", d.Interface)
     if err != nil {
         return
     }

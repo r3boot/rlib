@@ -4,8 +4,10 @@ type Sysctl struct {
     CmdSysctl   string
 }
 
-func (s Sysctl) Set (key string, value string) (err error) {
-    _, _, err = Run(s.CmdSysctl, "-w", key, "=", value)
+func (sp *Sysctl) Set (key string, value string) (err error) {
+    s := *sp
+
+    _, _, err = Run(s.CmdSysctl, "-w", key + "=" + value)
     return
 }
 

@@ -20,7 +20,7 @@ func (i Ip) FlushAddresses (af byte) (err error) {
     return
 }
 
-func (i Ip) FlushAllAddresses (err error) {
+func (i Ip) FlushAllAddresses () (err error) {
     if err = i.FlushAddresses(AF_INET); err != nil {
         return
     }
@@ -28,13 +28,17 @@ func (i Ip) FlushAllAddresses (err error) {
     if err = i.FlushAddresses(AF_INET6); err != nil {
         return
     }
+
+    return
 }
 
-func (i Ip) AddAddress (ip net.IPNet, af byte, err error) {
+func (i Ip) AddAddress (ip net.IPNet, af byte) (err error) {
     use_af, err := mkUseAf(af)
     if err != nil {
         return
     }
 
     sys.Run("/sbin/ip", use_af, "addr", "add", ip.String(), "dev", i.Interface)
+
+    return
 }

@@ -5,7 +5,12 @@ import (
 )
 
 func (r RA) AcceptsRA () (result bool, err error) {
-    value, err := sys.GetSysctl("net.ipv6.conf." + r.Interface + ".accept_ra")
+    s, err := sys.SysctlFactory()
+    if err != nil {
+        return
+    }
+
+    value, err := s.Get("net.ipv6.conf." + r.Interface + ".accept_ra")
     if err != nil {
         return
     }
@@ -14,19 +19,33 @@ func (r RA) AcceptsRA () (result bool, err error) {
     return
 }
 
-func (r RA) EnableRA () {
+func (r RA) EnableRA () (err error) {
+    s, err := sys.SysctlFactory()
+    if err != nil {
+        return
+    }
+
     ra_enabled, _ := r.AcceptsRA()
 
     if ! ra_enabled {
-        sys.SetSysctl("net.ipv6.conf." + r.Interface + ".accept_ra", "1")
+        s.Set("net.ipv6.conf." + r.Interface + ".accept_ra", "1")
     }
+
+    return
 }
 
-func (r RA) DisableRA () {
-   ra_enabled, _ := r.AcceptsRA()
-   if ra_enabled {
-        sys.SetSysctl("net.ipv6.conf." + r.Interface + ".accept_ra", "0")
+func (r RA) DisableRA () (err error){
+    s, err := sys.SysctlFactory()
+    if err != nil {
+        return
     }
+
+    ra_enabled, _ := r.AcceptsRA()
+    if ra_enabled {
+        s.Set("net.ipv6.conf." + r.Interface + ".accept_ra", "0")
+    }
+
+    return
 }
 
 func RAFactory (intf string) (r RA, err error) {

@@ -12,10 +12,12 @@ const INTF_TYPE_UNKNOWN  byte = 0x0
 const INTF_TYPE_LOOPBACK byte = 0x1
 const INTF_TYPE_ETHERNET byte = 0x2
 const INTF_TYPE_WIRELESS byte = 0x3
+const INTF_TYPE_TAP      byte = 0x4
 
 const LINK_LOOPBACK string = "772"
 const LINK_ETHERNET string = "0x020000"
 const LINK_WIRELESS string = "0x028000"
+const LINK_TAP      string = "3002"
 
 const AF_INET byte = 4
 const AF_INET6 byte= 6
