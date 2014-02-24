@@ -75,7 +75,7 @@ func (link *Link) GetType () (intf_type byte, err error) {
             return
         }
 
-        value = string(content[2:5])
+        value = string(content[2:6])
         if value == LINK_TAP {
             intf_type = INTF_TYPE_TAP
             return

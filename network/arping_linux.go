@@ -11,7 +11,7 @@ import (
  * Send count ARP Request packet(s) to ipaddr using arping. Return true if
  * the return code of arping is zero, false otherwise.
  */
-func Arping(ipaddr net.IP, intf net.Interface, count int) (up bool, latency float64, err error) {
+func Arping(ipaddr net.IP, intf_name string, count int) (up bool, latency float64, err error) {
     if ipaddr == nil {
         return
     }
@@ -21,7 +21,7 @@ func Arping(ipaddr net.IP, intf net.Interface, count int) (up bool, latency floa
         return
     }
 
-    stdout, _, err := sys.Run(arping, "-I", intf.Name, "-c", strconv.Itoa(count), "-w", "3", ipaddr.String())
+    stdout, _, err := sys.Run(arping, "-I", intf_name, "-c", strconv.Itoa(count), "-w", "3", ipaddr.String())
 
     var tot_latency float64 = 0
 
