@@ -1,7 +1,6 @@
 package network
 
 import (
-    "net"
     "github.com/r3boot/rlib/sys"
 )
 
@@ -32,13 +31,13 @@ func (i Ip) FlushAllAddresses () (err error) {
     return
 }
 
-func (i Ip) AddAddress (ip net.IPNet, af byte) (err error) {
+func (i Ip) AddAddress (ip string, af byte) (err error) {
     use_af, err := mkUseAf(af)
     if err != nil {
         return
     }
 
-    sys.Run("/sbin/ip", use_af, "addr", "add", ip.String(), "dev", i.Interface)
+    sys.Run("/sbin/ip", use_af, "addr", "add", ip, "dev", i.Interface)
 
     return
 }

@@ -48,6 +48,8 @@ func (l Link) SetLinkStatus (link_status byte) (err error) {
  * a wireless nic. All other pci classes get flagged unknown.
  */
 func (link *Link) GetType () (intf_type byte, err error) {
+    var sys_file string
+
     l := *link
     if ! l.HasLink() {
         if err = l.SetLinkStatus(LINK_UP); err != nil {
@@ -56,8 +58,8 @@ func (link *Link) GetType () (intf_type byte, err error) {
         }
     }
 
-    flags_file := "/sys/class/net/" + l.Interface.Name + "/type"
-    content, err := ioutil.ReadFile(flags_file)
+    sys_file = "/sys/class/net/" + l.Interface.Name + "/type"
+    content, err := ioutil.ReadFile(sys_file)
     if err != nil {
         return
     }
@@ -68,9 +70,9 @@ func (link *Link) GetType () (intf_type byte, err error) {
         return
     }
 
-    flags_file = "/sys/class/net/" + l.Interface.Name + "/tun_flags"
-    if sys.FileExists(flags_file) {
-        content, err = ioutil.ReadFile(flags_file)
+    sys_file = "/sys/class/net/" + l.Interface.Name + "/tun_flags"
+    if sys.FileExists(sys_file) {
+        content, err = ioutil.ReadFile(sys_file)
         if err != nil {
             return
         }
@@ -80,11 +82,11 @@ func (link *Link) GetType () (intf_type byte, err error) {
             intf_type = INTF_TYPE_TAP
             return
         }
-    } else {
+    }
 
-        class_file := "/sys/class/net/" + l.Interface.Name + "/device/class"
-        content, err = ioutil.ReadFile(class_file)
-        if err != nil {
+    sys_file = "/sys/class/net/" + l.Interface.Name + "/device/class"
+    if sys.FileExists(sys_file) {
+        if content, err = ioutil.ReadFile(sys_file); err != nil {
             return
         }
 
@@ -94,6 +96,19 @@ func (link *Link) GetType () (intf_type byte, err error) {
             return
         } else if value == LINK_ETHERNET {
             intf_type = INTF_TYPE_ETHERNET
+            return
+        }
+    }
+
+    sys_file = "/sys/class/net/" + l.Interface.Name + "/bonding/mode"
+    if sys.FileExists(sys_file) {
+        if content, err = ioutil.ReadFile(sys_file); err != nil {
+            return
+        }
+
+        value = string(content[0:13])
+        if value == LINK_BONDING {
+            intf_type = INTF_TYPE_BONDING
             return
         }
     }

@@ -42,13 +42,13 @@ func (i Ip) FlushAllAddresses () (err error) {
     return
 }
 
-func (i Ip) AddAddress (ip net.IPNet, af byte) (err error) {
+func (i Ip) AddAddress (ip string, af byte) (err error) {
     use_af, err := mkUseAf(af)
     if err != nil {
         return
     }
 
-    sys.Run("/sbin/ifconfig", i.Interface, use_af, "alias", ip.String())
+    sys.Run("/sbin/ifconfig", i.Interface, use_af, "alias", ip)
 
     return
 }

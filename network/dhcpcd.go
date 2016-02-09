@@ -1,57 +1,57 @@
 package network
 
 import (
-    "errors"
-    "net"
-    "io/ioutil"
-    "os"
-    "strings"
-    "github.com/r3boot/rlib/sys"
+	"errors"
+	"github.com/r3boot/rlib/sys"
+	"io/ioutil"
+	"net"
+	"os"
+	"strings"
 )
 
 type Dhcpcd struct {
-    Interface       string
-    SetMtu          bool
-    UseResolvconf   bool
-    CmdDhcpcd       string
+	Interface     string
+	SetMtu        bool
+	UseResolvconf bool
+	CmdDhcpcd     string
 }
 
 /*
  * Start dhcpcd on intf. Print an error if anything goes wrong
  */
-func (d Dhcpcd) Start () (err error) {
-    var args []string
-    args = append(args, "-q")
+func (d Dhcpcd) Start() (err error) {
+	var args []string
+	args = append(args, "-q")
 
-    if ! d.UseResolvconf {
-        args = append(args, "-C")
-        args = append(args, "resolv.conf")
-    }
+	if !d.UseResolvconf {
+		args = append(args, "-C")
+		args = append(args, "resolv.conf")
+	}
 
-    if ! d.SetMtu {
-        args = append(args, "-C")
-        args = append(args, "mtu")
-    }
+	if !d.SetMtu {
+		args = append(args, "-C")
+		args = append(args, "mtu")
+	}
 
-    args = append(args, d.Interface)
+	args = append(args, d.Interface)
 
-    _, _, err = sys.Run(d.CmdDhcpcd, args...)
-    if err != nil {
-        err = errors.New("Failed to start dhcpcd: " + err.Error())
-    }
+	_, _, err = sys.Run(d.CmdDhcpcd, args...)
+	if err != nil {
+		err = errors.New("Failed to start dhcpcd: " + err.Error())
+	}
 
-    return
+	return
 }
 
 /*
  * Stop dhcpcd on intf. Print an error if anything goes wrong
  */
-func (d Dhcpcd) Stop () (err error) {
-    _, _, err = sys.Run(d.CmdDhcpcd, "-k", d.Interface)
-    if err != nil {
-        err = errors.New("Failed to stop dhcpcd: " + err.Error())
-    }
-    return
+func (d Dhcpcd) Stop() (err error) {
+	_, _, err = sys.Run(d.CmdDhcpcd, "-k", d.Interface)
+	if err != nil {
+		err = errors.New("Failed to stop dhcpcd: " + err.Error())
+	}
+	return
 }
 
 /*
@@ -61,86 +61,86 @@ func (d Dhcpcd) Stop () (err error) {
  * "dhcpcd" and intf.Name. If both match, return true. All other results
  * will return false.
  */
-func (d Dhcpcd) IsRunning () bool {
+func (d Dhcpcd) IsRunning() bool {
 
-    pid_file := "/run/dhcpcd-" + d.Interface + ".pid"
-    _, err := os.Stat(pid_file)
-    if err != nil {
-        return false
-    }
+	pid_file := "/run/dhcpcd-" + d.Interface + ".pid"
+	_, err := os.Stat(pid_file)
+	if err != nil {
+		return false
+	}
 
-    content, err := ioutil.ReadFile(pid_file)
-    if err != nil {
-        return false
-    }
-    pid := string(content)
+	content, err := ioutil.ReadFile(pid_file)
+	if err != nil {
+		return false
+	}
+	pid := string(content)
 
-    proc_file := "/proc/" + pid + "/cmdline"
-    content, err = ioutil.ReadFile(proc_file)
-    if err != nil {
-        return false
-    }
-    ps := string(content)
+	proc_file := "/proc/" + pid + "/cmdline"
+	content, err = ioutil.ReadFile(proc_file)
+	if err != nil {
+		return false
+	}
+	ps := string(content)
 
-    return strings.Contains(ps, "dhcpcd") &&
-           strings.Contains(ps, d.Interface)
+	return strings.Contains(ps, "dhcpcd") &&
+		strings.Contains(ps, d.Interface)
 }
 
-func (d Dhcpcd) RemoveLeaseFile () (err error) {
-    lease_file := "/var/lib/dhcpcd/dhcpcd-" + d.Interface + ".lease"
-    if sys.FileExists(lease_file) {
-        os.Remove(lease_file)
-    }
+func (d Dhcpcd) RemoveLeaseFile() (err error) {
+	lease_file := "/var/lib/dhcpcd/dhcpcd-" + d.Interface + ".lease"
+	if sys.FileExists(lease_file) {
+		os.Remove(lease_file)
+	}
 
-    return
+	return
 }
 
-func (d Dhcpcd) GetOffer () (ip net.IP, network net.IPNet, err error) {
+func (d Dhcpcd) GetOffer() (ip net.IP, network net.IPNet, err error) {
 
-    if err = d.RemoveLeaseFile(); err != nil {
-        err = errors.New("Failed to remove lease file: " + err.Error())
-        return
-    }
+	if err = d.RemoveLeaseFile(); err != nil {
+		err = errors.New("Failed to remove lease file: " + err.Error())
+		return
+	}
 
-    stdout, _, err := sys.Run(d.CmdDhcpcd, "-4T", d.Interface)
-    if err != nil {
-        return
-    }
+	stdout, _, err := sys.Run(d.CmdDhcpcd, "-4T", d.Interface)
+	if err != nil {
+		return
+	}
 
-    var raw_ip, cidr_mask string
-    for _, line := range stdout {
-        t := strings.Split(line, "=")
-        if t[0] == "new_ip_address" {
-            raw_ip = t[1]
-        } else if t[0] == "new_subnet_cidr" {
-            cidr_mask = t[1]
-        }
-    }
+	var raw_ip, cidr_mask string
+	for _, line := range stdout {
+		t := strings.Split(line, "=")
+		if t[0] == "new_ip_address" {
+			raw_ip = t[1]
+		} else if t[0] == "new_subnet_cidr" {
+			cidr_mask = t[1]
+		}
+	}
 
-    if len(raw_ip) == 0 {
-        err = errors.New("Failed to obtain ip address")
-        return
-    } else if len(cidr_mask) == 0 {
-        err = errors.New("Failed to obtain cidr mask")
-        return
-    }
+	if len(raw_ip) == 0 {
+		err = errors.New("Failed to obtain ip address")
+		return
+	} else if len(cidr_mask) == 0 {
+		err = errors.New("Failed to obtain cidr mask")
+		return
+	}
 
-    i, n, err := net.ParseCIDR(raw_ip + "/" + cidr_mask)
-    if err == nil {
-        ip = i
-        network = *n
-    }
+	i, n, err := net.ParseCIDR(raw_ip + "/" + cidr_mask)
+	if err == nil {
+		ip = i
+		network = *n
+	}
 
-    return
+	return
 }
 
-func DhcpcdFactory (intf string) (d Dhcpcd, err error) {
-    dhcpcd, err := sys.BinaryPrefix("dhcpcd")
-    if err != nil {
-        return
-    }
+func DhcpcdFactory(intf string) (d Dhcpcd, err error) {
+	dhcpcd, err := sys.BinaryPrefix("dhcpcd")
+	if err != nil {
+		return
+	}
 
-    d = Dhcpcd{intf, false, false, dhcpcd}
+	d = Dhcpcd{intf, false, false, dhcpcd}
 
-    return
+	return
 }
